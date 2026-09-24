@@ -95,6 +95,10 @@ export function formatoFechaHora(iso: string): string {
   return `${formatoFecha(fecha)}, ${hora}`
 }
 
+export function formatoHora(iso: string): string {
+  return iso.split('T')[1] ?? ''
+}
+
 export function diasDesde(iso: string): number {
   const desde = Date.parse(`${iso}T00:00:00`)
   const hasta = Date.parse(`${hoy}T00:00:00`)
@@ -135,7 +139,7 @@ export const sectores: Sector[] = [
   },
   {
     id: 'sec-c',
-    nombre: 'Sector C – Mesa corrida',
+    nombre: '',
     invernadero: 'Invernadero 2',
     superficie: '260 m²',
   },
@@ -482,6 +486,62 @@ export const sensores: Sensor[] = [
         detalle: 'Diagnóstico: fallo de placa, unidad en reposición',
       },
       { fecha: '2026-08-01', tecnico: 'A. Ríos', detalle: 'Instalación en módulo de aclimatación' },
+    ],
+  },
+  {
+    id: 'sn-012',
+    codigo: 'SNS-012',
+    nombre: 'Termopar de ambiente',
+    tipo: 'temperatura',
+    sectorId: 'sec-c',
+    plantacionId: 'pla-3',
+    ubicacionDetalle: 'Mesa central, altura de dosel',
+    estado: 'operativo',
+    ultimaRevision: '2026-09-10',
+    tecnicoRevision: 'M. Fernández',
+    proximaRevision: '2026-12-10',
+    instalado: '2026-05-11',
+    firmware: 'v2.4.1',
+    bateria: 81,
+    senal: 86,
+    ultimaLectura: { fecha: '2026-09-24T10:44', valor: 22.6 },
+    rangoNormal: { min: 18, max: 26 },
+    ...crearSeries(127, 22.5, 3.5, 22.6),
+    revisiones: [
+      {
+        fecha: '2026-09-10',
+        tecnico: 'M. Fernández',
+        detalle: 'Verificación con termómetro de referencia',
+      },
+      { fecha: '2026-05-11', tecnico: 'A. Ríos', detalle: 'Instalación en altura de dosel' },
+    ],
+  },
+  {
+    id: 'sn-013',
+    codigo: 'SNS-013',
+    nombre: 'Higrómetro ambiental',
+    tipo: 'humedad_aire',
+    sectorId: 'sec-c',
+    plantacionId: 'pla-3',
+    ubicacionDetalle: 'Pasillo central, altura de dosel',
+    estado: 'operativo',
+    ultimaRevision: '2026-09-10',
+    tecnicoRevision: 'M. Fernández',
+    proximaRevision: '2026-12-10',
+    instalado: '2026-05-11',
+    firmware: 'v2.4.1',
+    bateria: 74,
+    senal: 83,
+    ultimaLectura: { fecha: '2026-09-24T10:40', valor: 64 },
+    rangoNormal: { min: 55, max: 75 },
+    ...crearSeries(131, 64, 9, 64),
+    revisiones: [
+      {
+        fecha: '2026-09-10',
+        tecnico: 'M. Fernández',
+        detalle: 'Limpieza del filtro de aspiración',
+      },
+      { fecha: '2026-05-11', tecnico: 'A. Ríos', detalle: 'Instalación en altura de dosel' },
     ],
   },
 ]

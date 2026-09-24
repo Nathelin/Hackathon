@@ -141,17 +141,15 @@
               </div>
             </div>
 
-            <div class="max-w-full overflow-x-auto custom-scrollbar">
-              <div class="-ms-4 min-w-[600px] ps-2">
-                <VueApexCharts
-                  v-if="isMounted"
-                  type="area"
-                  height="320"
-                  :options="chartOptions"
-                  :series="series"
-                />
-              </div>
-            </div>
+            <LecturaChart
+              :etiquetas="etiquetasGrafico"
+              :datos="datosGrafico"
+              :unidad="tipoSensor[sensor.tipo].unidad"
+              :min="sensor.rangoNormal.min"
+              :max="sensor.rangoNormal.max"
+              :serie="tipoSensor[sensor.tipo].label"
+              :altura="320"
+            />
           </div>
         </div>
 
@@ -271,13 +269,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import VueApexCharts from 'vue3-apexcharts'
-import type { ApexOptions } from 'apexcharts'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import EstadoSensor from '@/components/sensores/EstadoSensor.vue'
+import LecturaChart from '@/components/sensores/LecturaChart.vue'
 import ChevronRightIcon from '@/icons/ChevronRightIcon.vue'
 import {
   diasDesde,
@@ -294,7 +291,6 @@ import {
 } from '@/data/mockSensores'
 
 const route = useRoute()
-const isMounted = ref(false)
 
 const sensor = computed(() => sensorPorId(String(route.params.id)))
 const rangoGrafico = ref<'24h' | 'd7'>('24h')
@@ -304,78 +300,12 @@ const rangosGrafico = [
   { valor: 'd7' as const, etiqueta: 'Últimos 7 días' },
 ]
 
-const chartOptions = computed<ApexOptions>(() => {
-  const actual = sensor.value
-  const unidad = actual ? tipoSensor[actual.tipo].unidad : ''
-  const min = actual ? actual.rangoNormal.min : 0
-  const max = actual ? actual.rangoNormal.max : 1
-  const margen = (max - min) * 0.5 || 1
+const etiquetasGrafico = computed(() => (rangoGrafico.value === '24h' ? etiquetas24h : etiquetas7d))
 
-  return {
-    legend: { show: false },
-    colors: ['#465FFF'],
-    chart: {
-      fontFamily: 'Outfit, sans-serif',
-      type: 'area',
-      toolbar: { show: false },
-      zoom: { enabled: false },
-    },
-    fill: {
-      type: 'gradient',
-      gradient: { opacityFrom: 0.55, opacityTo: 0 },
-    },
-    stroke: { curve: 'smooth', width: [2] },
-    markers: { size: 0 },
-    grid: {
-      xaxis: { lines: { show: false } },
-      yaxis: { lines: { show: true } },
-    },
-    dataLabels: { enabled: false },
-    annotations: {
-      yaxis: [
-        {
-          y: min,
-          borderColor: '#12b76a',
-          strokeDashArray: 4,
-          label: {
-            text: `Mín ${min}`,
-            style: { color: '#fff', background: '#12b76a', fontSize: '11px' },
-          },
-        },
-        {
-          y: max,
-          borderColor: '#12b76a',
-          strokeDashArray: 4,
-          label: {
-            text: `Máx ${max}`,
-            style: { color: '#fff', background: '#12b76a', fontSize: '11px' },
-          },
-        },
-      ],
-    },
-    tooltip: {
-      y: { formatter: (valor: number) => `${valor} ${unidad}` },
-    },
-    xaxis: {
-      type: 'category',
-      categories: rangoGrafico.value === '24h' ? etiquetas24h : etiquetas7d,
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-      tooltip: { enabled: false },
-    },
-    yaxis: {
-      min: Math.max(0, min - margen),
-      max: max + margen,
-      decimalsInFloat: 1,
-    },
-  }
-})
-
-const series = computed(() => {
+const datosGrafico = computed(() => {
   const actual = sensor.value
   if (!actual) return []
-  const datos = rangoGrafico.value === '24h' ? actual.serie24h : actual.serie7d
-  return [{ name: tipoSensor[actual.tipo].label, data: datos }]
+  return rangoGrafico.value === '24h' ? actual.serie24h : actual.serie7d
 })
 
 const fichaTecnica = computed(() => {
@@ -433,8 +363,4 @@ function claseBarra(bateria: number) {
   if (bateria <= 50) return 'bg-warning-500'
   return 'bg-success-500'
 }
-
-onMounted(() => {
-  isMounted.value = true
-})
 </script>
