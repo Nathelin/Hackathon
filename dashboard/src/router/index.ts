@@ -11,7 +11,7 @@ const router = createRouter({
       name: 'Principal',
       component: () => import('../views/DashboardPrincipal.vue'),
       meta: {
-        title: 'Dashboard principal',
+        title: 'Invernadero 1',
       },
     },
     {
@@ -19,7 +19,7 @@ const router = createRouter({
       name: 'Invernadero2',
       component: () => import('../views/Invernadero2.vue'),
       meta: {
-        title: 'Dashboard invernadero2',
+        title: 'Invernadero 2',
       },
     },
     {
@@ -27,7 +27,7 @@ const router = createRouter({
       name: 'Calendar',
       component: () => import('../views/Others/Calendar.vue'),
       meta: {
-        title: 'Calendar',
+        title: 'Calendario de mantenimiento',
       },
     },
     {
@@ -43,7 +43,7 @@ const router = createRouter({
       name: 'SensorDetalle',
       component: () => import('../views/SensorDetalle.vue'),
       meta: {
-        title: 'Detalle del sensor',
+        title: 'Detalle del dispositivo',
       },
     },
     {

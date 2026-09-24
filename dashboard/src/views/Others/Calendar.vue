@@ -38,45 +38,45 @@
             <h5
               class="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl pe-14"
             >
-              {{ selectedEvent ? 'Edit Event' : 'Add Event' }}
+              {{ selectedEvent ? 'Editar actividad' : 'Registrar actividad' }}
             </h5>
             <p class="text-sm text-gray-500 dark:text-gray-400 pe-14">
-              Plan your next big moment: schedule or edit an event to stay on track
+              Registra y revisa las fechas y horas de calibración y mantenimiento de tus dispositivos.
             </p>
 
             <div class="mt-8 space-y-6">
               <div>
                 <label for="event-title" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Event Title
+                  Título de la actividad
                 </label>
                 <input
                   id="event-title"
                   v-model="eventTitle"
                   type="text"
-                  placeholder="Enter event title"
+                  placeholder="Ej. Calibración de sonda de pH"
                   class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                 />
               </div>
 
-              <!-- Event Color -->
+              <!-- Activity type -->
               <div>
-                <label class="block mb-4 text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Event Color
+                <label class="mb-4 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                  Tipo de actividad
                 </label>
                 <div class="flex flex-wrap items-center gap-3 sm:gap-4">
-                  <div v-for="entry in calendarsEvents" :key="entry.key" class="n-chk">
-                    <div :class="`form-check form-check-${entry.value} form-check-inline`">
+                  <div v-for="entry in activityTypes" :key="entry.key" class="n-chk">
+                    <div class="form-check form-check-inline">
                       <label
-                        class="flex items-center text-sm text-gray-700 form-check-label dark:text-gray-400 cursor-pointer"
+                        class="form-check-label flex cursor-pointer items-center text-sm text-gray-700 dark:text-gray-400"
                         :for="'modal' + entry.key"
                       >
                         <span class="relative">
                           <input
                             type="radio"
-                            name="event-level"
+                            name="activity-type"
                             :value="entry.key"
                             :id="'modal' + entry.key"
-                            v-model="eventLevel"
+                            v-model="eventType"
                             class="sr-only form-check-input"
                           />
                           <span
@@ -84,17 +84,33 @@
                           >
                           </span>
                         </span>
-                        {{ entry.key }}
+                        {{ entry.label }}
                       </label>
                     </div>
                   </div>
                 </div>
               </div>
 
+              <div>
+                <label for="event-device" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                  Dispositivo
+                </label>
+                <select
+                  id="event-device"
+                  v-model="eventDeviceId"
+                  class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
+                >
+                  <option value="">Actividad general</option>
+                  <option v-for="device in dispositivos" :key="device.id" :value="device.id">
+                    {{ device.codigo }} · {{ device.nombre }}
+                  </option>
+                </select>
+              </div>
+
               <!-- Start Date -->
               <div>
                 <label for="event-start-date" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Enter Start Date
+                  Fecha de inicio
                 </label>
                 <div class="relative">
                   <input
@@ -126,10 +142,22 @@
                 </div>
               </div>
 
-              <!-- End Date -->
+              <div>
+                <label for="event-start-time" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                  Hora de inicio
+                </label>
+                <input
+                  id="event-start-time"
+                  type="time"
+                  v-model="eventStartTime"
+                  @click="($event.target as any).showPicker?.()"
+                  class="h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 cursor-pointer"
+                />
+              </div>
+
               <div>
                 <label for="event-end-date" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Enter End Date
+                  Fecha de finalización
                 </label>
                 <div class="relative">
                   <input
@@ -160,6 +188,19 @@
                   </span>
                 </div>
               </div>
+
+              <div>
+                <label for="event-end-time" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                  Hora de finalización
+                </label>
+                <input
+                  id="event-end-time"
+                  type="time"
+                  v-model="eventEndTime"
+                  @click="($event.target as any).showPicker?.()"
+                  class="h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 cursor-pointer"
+                />
+              </div>
             </div>
 
             <!-- Modal Footer -->
@@ -169,7 +210,7 @@
                 type="button"
                 class="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] sm:w-auto"
               >
-                Close
+                Cancelar
               </button>
 
               <button
@@ -177,7 +218,7 @@
                 type="button"
                 class="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
               >
-                {{ selectedEvent ? 'Update Changes' : 'Add Event' }}
+                {{ selectedEvent ? 'Guardar cambios' : 'Registrar actividad' }}
               </button>
             </div>
           </div>
@@ -191,6 +232,7 @@
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import Modal from '@/components/profile/Modal.vue'
+import { dispositivos } from '@/data/mockSensores'
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 
 import FullCalendar from '@fullcalendar/vue3'
@@ -204,57 +246,91 @@ import '@fullcalendar/vue3/skeleton.css'
 import '@fullcalendar/vue3/themes/classic/palette.css'
 import '@fullcalendar/vue3/themes/classic/theme.css'
 
-const currentPageTitle = ref('Calendar')
+const currentPageTitle = ref('Calendario de mantenimiento')
 const calendarContainerRef = ref<HTMLElement | null>(null)
 const calendarRef = ref<any>(null)
 
 const isOpen = ref(false)
 const selectedEvent = ref<any>(null)
 const eventTitle = ref('')
+const eventType = ref<'calibracion' | 'mantenimiento'>('mantenimiento')
+const eventDeviceId = ref('')
 const eventStartDate = ref('')
+const eventStartTime = ref('09:00')
 const eventEndDate = ref('')
+const eventEndTime = ref('10:00')
 const eventLevel = ref('Primary')
 const currentView = ref('dayGridMonth')
 
 const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl'
-const locale = typeof document !== 'undefined' && document.documentElement.lang ? document.documentElement.lang : 'en'
+const locale = 'es'
 const isMobile = ref(typeof window !== 'undefined' ? window.innerWidth < 640 : false)
 
 const viewOptions = [
-  { key: 'dayGridMonth', label: 'Month' },
-  { key: 'multiMonthYear', label: 'Year' },
-  { key: 'timeGridWeek', label: 'Week' },
-  { key: 'timeGridDay', label: 'Day' },
+  { key: 'dayGridMonth', label: 'Mes' },
+  { key: 'multiMonthYear', label: 'Año' },
+  { key: 'timeGridWeek', label: 'Semana' },
+  { key: 'timeGridDay', label: 'Día' },
 ]
 
-const calendarsEvents = [
-  { key: 'Danger', value: 'danger' },
-  { key: 'Success', value: 'success' },
-  { key: 'Primary', value: 'primary' },
-  { key: 'Warning', value: 'warning' },
+const activityTypes = [
+  { key: 'calibracion' as const, label: 'Calibración' },
+  { key: 'mantenimiento' as const, label: 'Mantenimiento' },
 ]
 
-const events = ref([
-  {
-    id: '1',
-    title: 'Event Conf.',
-    start: new Date().toISOString().split('T')[0],
-    extendedProps: { calendar: 'Danger' },
-  },
-  {
-    id: '2',
-    title: 'Meeting',
-    start: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-    extendedProps: { calendar: 'Success' },
-  },
-  {
-    id: '3',
-    title: 'Workshop',
-    start: new Date(Date.now() + 172800000).toISOString().split('T')[0],
-    end: new Date(Date.now() + 259200000).toISOString().split('T')[0],
-    extendedProps: { calendar: 'Primary' },
-  },
-])
+type MaintenanceEvent = {
+  id: string
+  title: string
+  start: string
+  end: string
+  allDay: boolean
+  extendedProps: {
+    calendar: string
+    activityType: 'calibracion' | 'mantenimiento'
+    deviceId?: string
+    automatic?: boolean
+  }
+}
+
+const storageKey = 'invernadero-maintenance-calendar'
+
+const eventDateTime = (date: string, time = '09:00') => `${date}T${time}`
+
+const automaticEvents: MaintenanceEvent[] = dispositivos.flatMap((device) => {
+  const history = device.revisiones.map((revision, index) => ({
+    id: `history-${device.id}-${index}`,
+    title: `${revision.detalle} · ${device.codigo}`,
+    start: eventDateTime(revision.fecha),
+    end: eventDateTime(revision.fecha, '10:00'),
+    allDay: false,
+    extendedProps: {
+      calendar: 'Success',
+      activityType: /calibr/i.test(revision.detalle) ? ('calibracion' as const) : ('mantenimiento' as const),
+      deviceId: device.id,
+      automatic: true,
+    },
+  }))
+  const upcomingType = /calibr/i.test(device.nombre) ? 'calibracion' : 'mantenimiento'
+  return [
+    ...history,
+    {
+      id: `upcoming-${device.id}`,
+      title: `${upcomingType === 'calibracion' ? 'Calibración' : 'Mantenimiento'} programado · ${device.codigo}`,
+      start: eventDateTime(device.proximaRevision),
+      end: eventDateTime(device.proximaRevision, '10:00'),
+      allDay: false,
+      extendedProps: {
+        calendar: 'Warning',
+        activityType: upcomingType as 'calibracion' | 'mantenimiento',
+        deviceId: device.id,
+        automatic: true,
+      },
+    },
+  ]
+})
+
+const savedEvents = typeof window !== 'undefined' ? window.localStorage.getItem(storageKey) : null
+const events = ref<MaintenanceEvent[]>(savedEvents ? JSON.parse(savedEvents) : automaticEvents)
 
 const openModal = () => {
   isOpen.value = true
@@ -267,8 +343,12 @@ const closeModal = () => {
 
 const resetModalFields = () => {
   eventTitle.value = ''
+  eventType.value = 'mantenimiento'
+  eventDeviceId.value = ''
   eventStartDate.value = ''
+  eventStartTime.value = '09:00'
   eventEndDate.value = ''
+  eventEndTime.value = '10:00'
   eventLevel.value = 'Primary'
   selectedEvent.value = null
 }
@@ -283,6 +363,8 @@ const handleOpenAddModal = () => {
 
   eventStartDate.value = combineDate
   eventEndDate.value = combineDate
+  eventStartTime.value = '09:00'
+  eventEndTime.value = '10:00'
   openModal()
 }
 
@@ -292,6 +374,8 @@ const handleDateSelect = (selectInfo: any) => {
   eventEndDate.value = selectInfo.endStr
     ? selectInfo.endStr.split('T')[0]
     : eventStartDate.value
+  eventStartTime.value = selectInfo.startStr?.split('T')[1]?.slice(0, 5) || '09:00'
+  eventEndTime.value = selectInfo.endStr?.split('T')[1]?.slice(0, 5) || '10:00'
   openModal()
 }
 
@@ -311,35 +395,49 @@ const handleEventClick = (clickInfo: any) => {
     extendedProps: { calendar: event.extendedProps?.calendar || 'Primary' },
   }
   eventTitle.value = event.title
+  eventType.value = event.extendedProps?.activityType || 'mantenimiento'
+  eventDeviceId.value = event.extendedProps?.deviceId || ''
   eventStartDate.value = event.startStr ? event.startStr.split('T')[0] : ''
+  eventStartTime.value = event.startStr?.split('T')[1]?.slice(0, 5) || '09:00'
   eventEndDate.value = event.endStr ? event.endStr.split('T')[0] : eventStartDate.value
+  eventEndTime.value = event.endStr?.split('T')[1]?.slice(0, 5) || '10:00'
   eventLevel.value = event.extendedProps?.calendar || 'Primary'
   openModal()
 }
 
 const handleAddOrUpdateEvent = () => {
-  const titleVal = eventTitle.value.trim() || (selectedEvent.value ? 'Event' : 'New Event')
+  const device = dispositivos.find((item) => item.id === eventDeviceId.value)
+  const activityLabel = eventType.value === 'calibracion' ? 'Calibración' : 'Mantenimiento'
+  const titleVal =
+    eventTitle.value.trim() ||
+    `${activityLabel}${device ? ` · ${device.codigo}` : ''}`
+  const start = eventDateTime(eventStartDate.value, eventStartTime.value)
+  const end = eventDateTime(eventEndDate.value || eventStartDate.value, eventEndTime.value)
+  const eventData = {
+    title: titleVal,
+    start,
+    end,
+    allDay: false,
+    extendedProps: {
+      calendar: eventLevel.value || 'Primary',
+      activityType: eventType.value,
+      deviceId: eventDeviceId.value || undefined,
+    },
+  }
 
   if (selectedEvent.value) {
     events.value = events.value.map((ev) =>
       ev.id === selectedEvent.value.id
         ? {
             ...ev,
-            title: titleVal,
-            start: eventStartDate.value,
-            end: eventEndDate.value || eventStartDate.value,
-            extendedProps: { calendar: eventLevel.value || 'Primary' },
+            ...eventData,
           }
         : ev,
     )
   } else {
-    const newEvent = {
+    const newEvent: MaintenanceEvent = {
       id: Date.now().toString(),
-      title: titleVal,
-      start: eventStartDate.value,
-      end: eventEndDate.value || eventStartDate.value,
-      allDay: true,
-      extendedProps: { calendar: eventLevel.value || 'Primary' },
+      ...eventData,
     }
     events.value = [...events.value, newEvent]
   }
@@ -348,6 +446,10 @@ const handleAddOrUpdateEvent = () => {
   if (calApi) {
     calApi.removeAllEvents()
     events.value.forEach((ev) => calApi.addEvent(ev))
+  }
+
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(storageKey, JSON.stringify(events.value))
   }
 
   closeModal()
@@ -553,6 +655,7 @@ const calendarOptions: any = reactive({
     multiMonthPlugin,
   ],
   initialView: 'dayGridMonth',
+  locale: 'es',
   direction: (isRtl ? 'rtl' : 'ltr') as 'rtl' | 'ltr',
   height: 'auto',
 
@@ -594,7 +697,7 @@ const calendarOptions: any = reactive({
         'flex size-9! sm:size-10! p-0! items-center justify-center! rounded-lg! border! bg-transparent! border-gray-200! text-gray-700 hover:border-gray-200 hover:bg-gray-50! focus:shadow-none active:border-gray-200! active:bg-transparent! active:shadow-none! dark:border-gray-800! dark:text-gray-400 dark:hover:border-gray-800 dark:hover:bg-gray-900! dark:active:border-gray-800!',
     },
     addEventButton: {
-      text: 'Add Event +',
+      text: 'Registrar actividad +',
       click: handleOpenAddModal,
       className:
         'rounded-lg! border-0! bg-brand-500! px-3! sm:px-4! py-2! sm:py-2.5! text-xs! sm:text-sm! font-medium! text-white hover:bg-brand-600! focus:shadow-none! w-auto!',

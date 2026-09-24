@@ -53,7 +53,7 @@
         <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2 md:gap-6">
           <article
             v-for="lectura in ambiente"
-            :key="lectura.sensor.id"
+            :key="lectura.dispositivo.id"
             class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] sm:p-6"
           >
             <div class="flex flex-wrap items-start justify-between gap-3">
@@ -62,35 +62,39 @@
                   {{ lectura.titulo }}
                 </h4>
                 <p class="mt-0.5 text-theme-xs text-gray-500 dark:text-gray-400">
-                  {{ lectura.sensor.codigo }} · {{ lectura.sensor.nombre }}
+                  {{ lectura.dispositivo.codigo }} · {{ lectura.dispositivo.nombre }}
                 </p>
               </div>
 
-              <EstadoSensor :estado="lectura.sensor.estado" :alerta="enAlerta(lectura.sensor)" />
+              <EstadoSensor
+                :estado="lectura.dispositivo.estado"
+                :alerta="medicionEnAlerta(lectura.dispositivo, lectura.medicion)"
+              />
             </div>
 
             <div class="mt-3 flex flex-wrap items-baseline justify-between gap-2">
               <p class="flex items-baseline gap-1.5">
                 <span class="text-title-md font-bold text-gray-800 dark:text-white/90">
-                  {{ lectura.sensor.ultimaLectura.valor }}
+                  {{ lectura.medicion.ultimaLectura.valor }}
                 </span>
                 <span class="text-theme-sm text-gray-500 dark:text-gray-400">
-                  {{ tipoSensor[lectura.sensor.tipo].unidad }}
+                  {{ tipoSensor[lectura.medicion.tipo].unidad }}
                 </span>
               </p>
               <p class="text-theme-xs text-gray-500 dark:text-gray-400">
-                Rango {{ lectura.sensor.rangoNormal.min }} – {{ lectura.sensor.rangoNormal.max }} ·
-                lectura {{ formatoHora(lectura.sensor.ultimaLectura.fecha) }}
+                Rango {{ lectura.medicion.rangoNormal.min }} –
+                {{ lectura.medicion.rangoNormal.max }} · lectura
+                {{ formatoHora(lectura.medicion.ultimaLectura.fecha) }}
               </p>
             </div>
 
             <div class="mt-4">
               <LecturaChart
                 :etiquetas="etiquetas"
-                :datos="datosDe(lectura.sensor)"
-                :unidad="tipoSensor[lectura.sensor.tipo].unidad"
-                :min="lectura.sensor.rangoNormal.min"
-                :max="lectura.sensor.rangoNormal.max"
+                :datos="datosDe(lectura.medicion)"
+                :unidad="tipoSensor[lectura.medicion.tipo].unidad"
+                :min="lectura.medicion.rangoNormal.min"
+                :max="lectura.medicion.rangoNormal.max"
                 :serie="lectura.titulo"
                 :altura="240"
               />
@@ -98,7 +102,7 @@
 
             <div class="mt-3 flex justify-end border-t border-gray-100 pt-3 dark:border-gray-800">
               <router-link
-                :to="{ name: 'SensorDetalle', params: { id: lectura.sensor.id } }"
+                :to="{ name: 'SensorDetalle', params: { id: lectura.dispositivo.id } }"
                 class="text-theme-xs font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
               >
                 Ver detalle
@@ -114,8 +118,8 @@
             Tanques del invernadero
           </h3>
           <p class="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">
-            {{ tanquesVista.length }} tanques en {{ camas.size }} camas · clic en un sensor para ver
-            su desglose con históricos
+            {{ tanquesVista.length }} tanques en {{ camas.size }} camas · clic en una medición para
+            ver el desglose del dispositivo con sus históricos
           </p>
         </div>
 
@@ -131,7 +135,8 @@
                   {{ fila.tanque.nombre }}
                 </h4>
                 <p class="mt-0.5 text-theme-xs text-gray-500 dark:text-gray-400">
-                  Capacidad {{ fila.tanque.capacidadLitros.toLocaleString('es-AR') }} L
+                  Capacidad {{ fila.tanque.capacidadLitros.toLocaleString('es-AR') }} L ·
+                  {{ fila.dispositivo.codigo }}
                 </p>
               </div>
               <span
@@ -146,7 +151,10 @@
                 <span class="text-theme-xs font-medium text-gray-500 dark:text-gray-400">
                   Nivel de agua
                 </span>
-                <EstadoSensor :estado="fila.nivel.estado" :alerta="enAlerta(fila.nivel)" />
+                <EstadoSensor
+                  :estado="fila.dispositivo.estado"
+                  :alerta="medicionEnAlerta(fila.dispositivo, fila.nivel)"
+                />
               </div>
 
               <div class="mt-2 flex flex-wrap items-baseline gap-1.5">
@@ -171,27 +179,35 @@
                 ></span>
               </div>
 
+              <div
+                class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-3 dark:border-gray-800"
+              >
+                <span class="text-theme-xs font-medium text-gray-500 dark:text-gray-400">
+                  Bomba de agua
+                </span>
+                <span :class="[chipBase, chipColor[bombaEstado[fila.tanque.bomba].color]]">
+                  {{ bombaEstado[fila.tanque.bomba].label }}
+                </span>
+              </div>
+
               <p
                 class="mt-2 text-theme-xs font-medium"
-                :class="
-                  estadoBombeo(fila).alerta
-                    ? 'text-error-600 dark:text-error-500'
-                    : 'text-success-600 dark:text-success-500'
-                "
+                :class="tonoBombeo[estadoBombeo(fila).tono]"
               >
                 {{ estadoBombeo(fila).texto }}
               </p>
 
               <p class="mt-1.5 text-theme-xs text-gray-500 dark:text-gray-400">
-                {{ fila.nivel.codigo }} · lectura {{ formatoHora(fila.nivel.ultimaLectura.fecha) }}
+                {{ fila.dispositivo.codigo }} · lectura
+                {{ formatoHora(fila.nivel.ultimaLectura.fecha) }}
               </p>
             </div>
 
             <div class="mt-3 space-y-3">
               <router-link
                 v-for="medicion in medicionesDe(fila)"
-                :key="medicion.sensor.id"
-                :to="{ name: 'SensorDetalle', params: { id: medicion.sensor.id } }"
+                :key="medicion.medicion.tipo"
+                :to="{ name: 'SensorDetalle', params: { id: fila.dispositivo.id } }"
                 class="block rounded-xl border border-gray-100 p-3 transition hover:border-brand-300 hover:bg-gray-50 dark:border-gray-800 dark:hover:border-brand-500/40 dark:hover:bg-white/[0.03]"
               >
                 <div class="flex flex-wrap items-center justify-between gap-2">
@@ -199,29 +215,29 @@
                     {{ medicion.etiqueta }}
                   </span>
                   <EstadoSensor
-                    :estado="medicion.sensor.estado"
-                    :alerta="enAlerta(medicion.sensor)"
+                    :estado="fila.dispositivo.estado"
+                    :alerta="medicionEnAlerta(fila.dispositivo, medicion.medicion)"
                   />
                 </div>
 
                 <div class="mt-1.5 flex items-baseline gap-1.5">
                   <span class="text-title-sm font-bold text-gray-800 dark:text-white/90">
-                    {{ medicion.sensor.ultimaLectura.valor }}
+                    {{ medicion.medicion.ultimaLectura.valor }}
                   </span>
                   <span class="text-theme-xs text-gray-500 dark:text-gray-400">
-                    {{ tipoSensor[medicion.sensor.tipo].unidad }}
+                    {{ tipoSensor[medicion.medicion.tipo].unidad }}
                   </span>
                 </div>
 
                 <p class="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
-                  Rango {{ medicion.sensor.rangoNormal.min }} –
-                  {{ medicion.sensor.rangoNormal.max }} · lectura
-                  {{ formatoHora(medicion.sensor.ultimaLectura.fecha) }}
+                  Rango {{ medicion.medicion.rangoNormal.min }} –
+                  {{ medicion.medicion.rangoNormal.max }} · lectura
+                  {{ formatoHora(medicion.medicion.ultimaLectura.fecha) }}
                 </p>
 
                 <div class="mt-2 flex items-center justify-between">
                   <span class="text-theme-xs text-gray-500 dark:text-gray-400">
-                    {{ medicion.sensor.codigo }}
+                    {{ fila.dispositivo.codigo }}
                   </span>
                   <span class="text-theme-xs font-medium text-brand-500 dark:text-brand-400">
                     Ver desglose
@@ -243,20 +259,23 @@ import AdminLayout from '@/components/layout/AdminLayout.vue'
 import EstadoSensor from '@/components/sensores/EstadoSensor.vue'
 import LecturaChart from '@/components/sensores/LecturaChart.vue'
 import {
+  bombaEstado,
+  dispositivos,
+  dispositivoDelTanque,
   diasDesde,
-  enAlerta,
   etiquetas24h,
   etiquetas7d,
   formatoFecha,
   formatoHora,
+  medicionEnAlerta,
+  medicionPorTipo,
   plantaciones,
   sectorPorId,
   sectores,
-  sensores,
-  sensoresDelTanque,
   tanquesDeInvernadero,
   tipoSensor,
-  type Sensor,
+  type Dispositivo,
+  type Medicion,
   type Tanque,
 } from '@/data/mockSensores'
 
@@ -264,7 +283,8 @@ const nombreInvernadero = 'Invernadero 2'
 
 interface LecturaAmbiente {
   titulo: string
-  sensor: Sensor
+  dispositivo: Dispositivo
+  medicion: Medicion
 }
 
 const metricasAmbiente = [
@@ -275,27 +295,36 @@ const metricasAmbiente = [
 const ambiente = computed<LecturaAmbiente[]>(() => {
   const items: LecturaAmbiente[] = []
   for (const metrica of metricasAmbiente) {
-    const sensor = sensores.find(
+    const dispositivo = dispositivos.find(
       (item) =>
-        item.tipo === metrica.tipo && sectorPorId(item.sectorId)?.invernadero === nombreInvernadero,
+        medicionPorTipo(item, metrica.tipo) !== undefined &&
+        sectorPorId(item.sectorId)?.invernadero === nombreInvernadero,
     )
-    if (sensor) items.push({ titulo: metrica.titulo, sensor })
+    if (!dispositivo) continue
+    const medicion = medicionPorTipo(dispositivo, metrica.tipo)
+    if (!medicion) continue
+    items.push({ titulo: metrica.titulo, dispositivo, medicion })
   }
   return items
 })
 
 interface FilaTanque {
   tanque: Tanque
-  nivel: Sensor
-  ph: Sensor
-  ec: Sensor
+  dispositivo: Dispositivo
+  nivel: Medicion
+  ph: Medicion
+  ec: Medicion
 }
 
 const tanquesVista = computed<FilaTanque[]>(() => {
   const items: FilaTanque[] = []
   for (const tanque of tanquesDeInvernadero(nombreInvernadero)) {
-    const delTanque = sensoresDelTanque(tanque)
-    if (delTanque) items.push({ tanque, ...delTanque })
+    const dispositivo = dispositivoDelTanque(tanque)
+    if (!dispositivo) continue
+    const nivel = medicionPorTipo(dispositivo, 'nivel_tanque')
+    const ph = medicionPorTipo(dispositivo, 'ph')
+    const ec = medicionPorTipo(dispositivo, 'ec')
+    if (nivel && ph && ec) items.push({ tanque, dispositivo, nivel, ph, ec })
   }
   return items
 })
@@ -304,8 +333,8 @@ const camas = computed(() => new Set(tanquesVista.value.map((fila) => fila.tanqu
 
 function medicionesDe(fila: FilaTanque) {
   return [
-    { etiqueta: 'pH', sensor: fila.ph },
-    { etiqueta: 'Conductividad', sensor: fila.ec },
+    { etiqueta: 'pH', medicion: fila.ph },
+    { etiqueta: 'Conductividad', medicion: fila.ec },
   ]
 }
 
@@ -327,14 +356,30 @@ function litrosDe(fila: FilaTanque) {
 }
 
 function estadoBombeo(fila: FilaTanque) {
+  const bomba = fila.tanque.bomba
   const valor = fila.nivel.ultimaLectura.valor
-  if (valor < fila.nivel.rangoNormal.min) {
-    return { texto: 'Nivel de agua bajo — posible problema de bombeo', alerta: true }
-  }
-  if (valor > fila.nivel.rangoNormal.max) {
-    return { texto: 'Nivel de agua fuera de rango — revisar bombeo', alerta: true }
-  }
-  return { texto: 'Bombeo sin novedades', alerta: false }
+  const { min, max } = fila.nivel.rangoNormal
+  if (bomba === 'alarma') return { texto: 'Bomba en alarma — revisar bombeo', tono: 'error' }
+  if (bomba === 'detenida') return { texto: 'Bomba detenida — no repone agua', tono: 'warning' }
+  if (valor < min)
+    return { texto: 'Nivel de agua bajo — posible problema de bombeo', tono: 'error' }
+  if (valor > max) return { texto: 'Nivel fuera de rango — revisar bombeo', tono: 'warning' }
+  return { texto: 'Bombeo sin novedades', tono: 'success' }
+}
+
+const chipBase = 'inline-flex items-center rounded-full px-2 py-0.5 text-theme-xs font-medium'
+
+const chipColor: Record<string, string> = {
+  success: 'bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500',
+  warning: 'bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-orange-400',
+  info: 'bg-blue-light-50 text-blue-light-500 dark:bg-blue-light-500/15 dark:text-blue-light-500',
+  error: 'bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-500',
+}
+
+const tonoBombeo: Record<string, string> = {
+  error: 'text-error-600 dark:text-error-500',
+  warning: 'text-warning-600 dark:text-orange-400',
+  success: 'text-success-600 dark:text-success-500',
 }
 
 const contexto = computed(() => {
@@ -344,7 +389,7 @@ const contexto = computed(() => {
     lineas.push(datosSector.join(' · '))
     for (const plantacion of plantaciones.filter((item) => item.sectorId === sector.id)) {
       lineas.push(
-        `${plantacion.cultivo} · var. ${plantacion.variedad} · siembra ${formatoFecha(
+        `${plantacion.cultivo} · siembra ${formatoFecha(
           plantacion.fechaSiembra,
         )} (${diasDesde(plantacion.fechaSiembra)} días de ciclo)`,
       )
@@ -366,7 +411,7 @@ const textoRango = computed(() =>
   rangoGrafico.value === '24h' ? 'Últimas 24 horas' : 'Últimos 7 días',
 )
 
-function datosDe(sensor: Sensor) {
-  return rangoGrafico.value === '24h' ? sensor.serie24h : sensor.serie7d
+function datosDe(medicion: Medicion) {
+  return rangoGrafico.value === '24h' ? medicion.serie24h : medicion.serie7d
 }
 </script>

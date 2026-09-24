@@ -3,6 +3,8 @@ export type SensorEstado = 'operativo' | 'revision' | 'sin_conexion' | 'fuera_se
 export type SensorTipo =
   'ph' | 'ec' | 'temperatura' | 'humedad_aire' | 'humedad_sustrato' | 'luz_par' | 'nivel_tanque'
 
+export type BombaEstado = 'operativa' | 'detenida' | 'alarma'
+
 export interface Sector {
   id: string
   nombre: string
@@ -34,22 +36,18 @@ export interface RangoNormal {
   max: number
 }
 
-export interface Tanque {
-  id: string
-  nombre: string
-  sectorId: string
-  cama: string
-  capacidadLitros: number
-  sensorNivelId: string
-  sensorPhId: string
-  sensorEcId: string
+export interface Medicion {
+  tipo: SensorTipo
+  ultimaLectura: Lectura
+  rangoNormal: RangoNormal
+  serie24h: number[]
+  serie7d: number[]
 }
 
-export interface Sensor {
+export interface Dispositivo {
   id: string
   codigo: string
   nombre: string
-  tipo: SensorTipo
   sectorId: string
   plantacionId: string
   ubicacionDetalle: string
@@ -62,11 +60,18 @@ export interface Sensor {
   firmware: string
   bateria: number
   senal: number
-  ultimaLectura: Lectura
-  rangoNormal: RangoNormal
-  serie24h: number[]
-  serie7d: number[]
+  mediciones: Medicion[]
   revisiones: Revision[]
+}
+
+export interface Tanque {
+  id: string
+  nombre: string
+  sectorId: string
+  cama: string
+  capacidadLitros: number
+  dispositivoId: string
+  bomba: BombaEstado
 }
 
 export const hoy = '2026-09-24'
@@ -89,6 +94,15 @@ export const estadoSensor: Record<
   revision: { label: 'Requiere revisión', color: 'warning' },
   sin_conexion: { label: 'Sin conexión', color: 'info' },
   fuera_servicio: { label: 'Fuera de servicio', color: 'error' },
+}
+
+export const bombaEstado: Record<
+  BombaEstado,
+  { label: string; color: 'success' | 'warning' | 'error' | 'info' }
+> = {
+  operativa: { label: 'Operativa', color: 'success' },
+  detenida: { label: 'Detenida', color: 'info' },
+  alarma: { label: 'Alarma', color: 'error' },
 }
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
@@ -167,7 +181,7 @@ export const plantaciones: Plantacion[] = [
   {
     id: 'pla-1',
     cultivo: 'Lechuga romana',
-    variedad: 'Saladbowl',
+    variedad: '',
     fechaSiembra: '2026-08-12',
     sectorId: 'sec-a',
   },
@@ -196,14 +210,31 @@ export const plantaciones: Plantacion[] = [
 
 export const tanques: Tanque[] = [
   {
+    id: 'tq-a',
+    nombre: 'Tanque A',
+    sectorId: 'sec-a',
+    cama: 'Bancada Norte',
+    capacidadLitros: 900,
+    dispositivoId: 'sn-020',
+    bomba: 'operativa',
+  },
+  {
+    id: 'tq-b',
+    nombre: 'Tanque B',
+    sectorId: 'sec-b',
+    cama: 'Bancada Sur',
+    capacidadLitros: 900,
+    dispositivoId: 'sn-021',
+    bomba: 'operativa',
+  },
+  {
     id: 'tq-norte',
     nombre: 'Tanque Norte',
     sectorId: 'sec-c',
     cama: 'Bancada 1',
     capacidadLitros: 1000,
-    sensorNivelId: 'sn-009',
-    sensorPhId: 'sn-007',
-    sensorEcId: 'sn-014',
+    dispositivoId: 'sn-007',
+    bomba: 'alarma',
   },
   {
     id: 'tq-sur',
@@ -211,9 +242,8 @@ export const tanques: Tanque[] = [
     sectorId: 'sec-c',
     cama: 'Bancada 2',
     capacidadLitros: 800,
-    sensorNivelId: 'sn-016',
-    sensorPhId: 'sn-015',
-    sensorEcId: 'sn-008',
+    dispositivoId: 'sn-008',
+    bomba: 'operativa',
   },
   {
     id: 'tq-respaldo',
@@ -221,18 +251,16 @@ export const tanques: Tanque[] = [
     sectorId: 'sec-c',
     cama: 'Bancada 2',
     capacidadLitros: 500,
-    sensorNivelId: 'sn-019',
-    sensorPhId: 'sn-017',
-    sensorEcId: 'sn-018',
+    dispositivoId: 'sn-017',
+    bomba: 'detenida',
   },
 ]
 
-export const sensores: Sensor[] = [
+export const dispositivos: Dispositivo[] = [
   {
     id: 'sn-001',
     codigo: 'SNS-001',
     nombre: 'Sonda de pH principal',
-    tipo: 'ph',
     sectorId: 'sec-a',
     plantacionId: 'pla-1',
     ubicacionDetalle: 'Mesa 1, fila A',
@@ -244,9 +272,14 @@ export const sensores: Sensor[] = [
     firmware: 'v2.4.1',
     bateria: 92,
     senal: 88,
-    ultimaLectura: { fecha: '2026-09-24T10:42', valor: 5.9 },
-    rangoNormal: { min: 5.5, max: 6.5 },
-    ...crearSeries(11, 5.9, 0.5, 5.9),
+    mediciones: [
+      {
+        tipo: 'ph',
+        ultimaLectura: { fecha: '2026-09-24T10:42', valor: 5.9 },
+        rangoNormal: { min: 5.5, max: 6.5 },
+        ...crearSeries(11, 5.9, 0.5, 5.9),
+      },
+    ],
     revisiones: [
       {
         fecha: '2026-09-05',
@@ -265,7 +298,6 @@ export const sensores: Sensor[] = [
     id: 'sn-002',
     codigo: 'SNS-002',
     nombre: 'Sensor de conductividad',
-    tipo: 'ec',
     sectorId: 'sec-a',
     plantacionId: 'pla-1',
     ubicacionDetalle: 'Mesa 2, fila B',
@@ -277,9 +309,14 @@ export const sensores: Sensor[] = [
     firmware: 'v2.4.1',
     bateria: 78,
     senal: 84,
-    ultimaLectura: { fecha: '2026-09-24T10:41', valor: 1.6 },
-    rangoNormal: { min: 1.2, max: 2.4 },
-    ...crearSeries(23, 1.6, 0.5, 1.6),
+    mediciones: [
+      {
+        tipo: 'ec',
+        ultimaLectura: { fecha: '2026-09-24T10:41', valor: 1.6 },
+        rangoNormal: { min: 1.2, max: 2.4 },
+        ...crearSeries(23, 1.6, 0.5, 1.6),
+      },
+    ],
     revisiones: [
       {
         fecha: '2026-09-05',
@@ -297,7 +334,6 @@ export const sensores: Sensor[] = [
     id: 'sn-003',
     codigo: 'SNS-003',
     nombre: 'Sonda de humedad de sustrato',
-    tipo: 'humedad_sustrato',
     sectorId: 'sec-a',
     plantacionId: 'pla-1',
     ubicacionDetalle: 'Mesa 3, fila A',
@@ -309,9 +345,14 @@ export const sensores: Sensor[] = [
     firmware: 'v2.3.8',
     bateria: 41,
     senal: 76,
-    ultimaLectura: { fecha: '2026-09-24T10:38', valor: 52 },
-    rangoNormal: { min: 40, max: 70 },
-    ...crearSeries(37, 52, 14, 52),
+    mediciones: [
+      {
+        tipo: 'humedad_sustrato',
+        ultimaLectura: { fecha: '2026-09-24T10:38', valor: 52 },
+        rangoNormal: { min: 40, max: 70 },
+        ...crearSeries(37, 52, 14, 52),
+      },
+    ],
     revisiones: [
       {
         fecha: '2026-06-18',
@@ -325,7 +366,6 @@ export const sensores: Sensor[] = [
     id: 'sn-004',
     codigo: 'SNS-004',
     nombre: 'Termopar de ambiente',
-    tipo: 'temperatura',
     sectorId: 'sec-b',
     plantacionId: 'pla-2',
     ubicacionDetalle: 'Mesa 1, fila C',
@@ -337,9 +377,14 @@ export const sensores: Sensor[] = [
     firmware: 'v2.4.1',
     bateria: 87,
     senal: 91,
-    ultimaLectura: { fecha: '2026-09-24T10:44', valor: 23.4 },
-    rangoNormal: { min: 18, max: 26 },
-    ...crearSeries(41, 23, 3.5, 23.4),
+    mediciones: [
+      {
+        tipo: 'temperatura',
+        ultimaLectura: { fecha: '2026-09-24T10:44', valor: 23.4 },
+        rangoNormal: { min: 18, max: 26 },
+        ...crearSeries(41, 23, 3.5, 23.4),
+      },
+    ],
     revisiones: [
       {
         fecha: '2026-08-30',
@@ -349,7 +394,7 @@ export const sensores: Sensor[] = [
       {
         fecha: '2026-05-30',
         tecnico: 'A. Ríos',
-        detalle: 'Ajuste de calibración por desviación de 0.4 °C',
+        detalle: 'Ajuste de calibración',
       },
     ],
   },
@@ -357,7 +402,6 @@ export const sensores: Sensor[] = [
     id: 'sn-005',
     codigo: 'SNS-005',
     nombre: 'Higrómetro ambiental',
-    tipo: 'humedad_aire',
     sectorId: 'sec-b',
     plantacionId: 'pla-2',
     ubicacionDetalle: 'Mesa 2, fila A',
@@ -369,9 +413,14 @@ export const sensores: Sensor[] = [
     firmware: 'v2.4.0',
     bateria: 65,
     senal: 79,
-    ultimaLectura: { fecha: '2026-09-24T10:40', valor: 68 },
-    rangoNormal: { min: 55, max: 75 },
-    ...crearSeries(53, 68, 10, 68),
+    mediciones: [
+      {
+        tipo: 'humedad_aire',
+        ultimaLectura: { fecha: '2026-09-24T10:40', valor: 68 },
+        rangoNormal: { min: 55, max: 75 },
+        ...crearSeries(53, 68, 10, 68),
+      },
+    ],
     revisiones: [
       { fecha: '2026-08-30', tecnico: 'A. Ríos', detalle: 'Limpieza del filtro de aspiración' },
       {
@@ -385,7 +434,6 @@ export const sensores: Sensor[] = [
     id: 'sn-006',
     codigo: 'SNS-006',
     nombre: 'Sensor PAR de dosel',
-    tipo: 'luz_par',
     sectorId: 'sec-b',
     plantacionId: 'pla-2',
     ubicacionDetalle: 'Dosel, eje central',
@@ -397,9 +445,14 @@ export const sensores: Sensor[] = [
     firmware: 'v2.4.0',
     bateria: 12,
     senal: 0,
-    ultimaLectura: { fecha: '2026-09-23T18:05', valor: 310 },
-    rangoNormal: { min: 200, max: 400 },
-    ...crearSeries(67, 310, 90, 310),
+    mediciones: [
+      {
+        tipo: 'luz_par',
+        ultimaLectura: { fecha: '2026-09-23T18:05', valor: 310 },
+        rangoNormal: { min: 200, max: 400 },
+        ...crearSeries(67, 310, 90, 310),
+      },
+    ],
     revisiones: [
       { fecha: '2026-07-22', tecnico: 'L. Ortiz', detalle: 'Actualización de firmware a v2.4.0' },
       { fecha: '2026-04-02', tecnico: 'A. Ríos', detalle: 'Montaje en dosel y ajuste de altura' },
@@ -408,58 +461,7 @@ export const sensores: Sensor[] = [
   {
     id: 'sn-007',
     codigo: 'SNS-007',
-    nombre: 'Sonda de pH – Tanque Norte',
-    tipo: 'ph',
-    sectorId: 'sec-c',
-    plantacionId: 'pla-3',
-    ubicacionDetalle: 'Tanque Norte · Bancada 1',
-    tanqueId: 'tq-norte',
-    estado: 'operativo',
-    ultimaRevision: '2026-09-10',
-    tecnicoRevision: 'M. Fernández',
-    proximaRevision: '2026-12-10',
-    instalado: '2026-05-11',
-    firmware: 'v2.4.1',
-    bateria: 73,
-    senal: 82,
-    ultimaLectura: { fecha: '2026-09-24T10:43', valor: 6.9 },
-    rangoNormal: { min: 5.5, max: 6.5 },
-    ...crearSeries(71, 6.4, 0.6, 6.9),
-    revisiones: [
-      { fecha: '2026-09-10', tecnico: 'M. Fernández', detalle: 'Calibración de electrodos' },
-      { fecha: '2026-06-10', tecnico: 'M. Fernández', detalle: 'Reemplazo de junta de referencia' },
-    ],
-  },
-  {
-    id: 'sn-008',
-    codigo: 'SNS-008',
-    nombre: 'Sensor de conductividad – Tanque Sur',
-    tipo: 'ec',
-    sectorId: 'sec-c',
-    plantacionId: 'pla-3',
-    ubicacionDetalle: 'Tanque Sur · Bancada 2',
-    tanqueId: 'tq-sur',
-    estado: 'operativo',
-    ultimaRevision: '2026-09-10',
-    tecnicoRevision: 'M. Fernández',
-    proximaRevision: '2026-12-10',
-    instalado: '2026-05-11',
-    firmware: 'v2.4.1',
-    bateria: 58,
-    senal: 74,
-    ultimaLectura: { fecha: '2026-09-24T10:39', valor: 2.1 },
-    rangoNormal: { min: 1.4, max: 2.6 },
-    ...crearSeries(83, 2.1, 0.4, 2.1),
-    revisiones: [
-      { fecha: '2026-09-10', tecnico: 'M. Fernández', detalle: 'Verificación con solución patrón' },
-      { fecha: '2026-05-11', tecnico: 'A. Ríos', detalle: 'Instalación y alta en la red LoRaWAN' },
-    ],
-  },
-  {
-    id: 'sn-009',
-    codigo: 'SNS-009',
-    nombre: 'Sensor de nivel – Tanque Norte',
-    tipo: 'nivel_tanque',
+    nombre: 'Dispositivo multi-sensor · Tanque Norte',
     sectorId: 'sec-c',
     plantacionId: 'pla-3',
     ubicacionDetalle: 'Tanque Norte · Bancada 1',
@@ -472,9 +474,26 @@ export const sensores: Sensor[] = [
     firmware: 'v2.3.8',
     bateria: 18,
     senal: 69,
-    ultimaLectura: { fecha: '2026-09-24T10:45', valor: 17 },
-    rangoNormal: { min: 20, max: 100 },
-    ...crearSeries(97, 45, 30, 17),
+    mediciones: [
+      {
+        tipo: 'ph',
+        ultimaLectura: { fecha: '2026-09-24T10:43', valor: 6.9 },
+        rangoNormal: { min: 5.5, max: 6.5 },
+        ...crearSeries(71, 6.4, 0.6, 6.9),
+      },
+      {
+        tipo: 'ec',
+        ultimaLectura: { fecha: '2026-09-24T10:41', valor: 1.9 },
+        rangoNormal: { min: 1.4, max: 2.6 },
+        ...crearSeries(141, 1.9, 0.4, 1.9),
+      },
+      {
+        tipo: 'nivel_tanque',
+        ultimaLectura: { fecha: '2026-09-24T10:45', valor: 17 },
+        rangoNormal: { min: 20, max: 100 },
+        ...crearSeries(97, 45, 30, 17),
+      },
+    ],
     revisiones: [
       {
         fecha: '2026-06-01',
@@ -485,10 +504,50 @@ export const sensores: Sensor[] = [
     ],
   },
   {
+    id: 'sn-008',
+    codigo: 'SNS-008',
+    nombre: 'Dispositivo multi-sensor · Tanque Sur',
+    sectorId: 'sec-c',
+    plantacionId: 'pla-3',
+    ubicacionDetalle: 'Tanque Sur · Bancada 2',
+    tanqueId: 'tq-sur',
+    estado: 'operativo',
+    ultimaRevision: '2026-09-10',
+    tecnicoRevision: 'M. Fernández',
+    proximaRevision: '2026-12-10',
+    instalado: '2026-05-11',
+    firmware: 'v2.4.1',
+    bateria: 58,
+    senal: 74,
+    mediciones: [
+      {
+        tipo: 'ph',
+        ultimaLectura: { fecha: '2026-09-24T10:43', valor: 5.7 },
+        rangoNormal: { min: 5.5, max: 6.5 },
+        ...crearSeries(149, 5.8, 0.5, 5.7),
+      },
+      {
+        tipo: 'ec',
+        ultimaLectura: { fecha: '2026-09-24T10:39', valor: 2.1 },
+        rangoNormal: { min: 1.4, max: 2.6 },
+        ...crearSeries(83, 2.1, 0.4, 2.1),
+      },
+      {
+        tipo: 'nivel_tanque',
+        ultimaLectura: { fecha: '2026-09-24T10:45', valor: 48 },
+        rangoNormal: { min: 20, max: 100 },
+        ...crearSeries(151, 55, 25, 48),
+      },
+    ],
+    revisiones: [
+      { fecha: '2026-09-10', tecnico: 'M. Fernández', detalle: 'Verificación con solución patrón' },
+      { fecha: '2026-05-11', tecnico: 'A. Ríos', detalle: 'Instalación y alta en la red LoRaWAN' },
+    ],
+  },
+  {
     id: 'sn-010',
     codigo: 'SNS-010',
     nombre: 'Termopar de aclimatación',
-    tipo: 'temperatura',
     sectorId: 'sec-d',
     plantacionId: 'pla-4',
     ubicacionDetalle: 'Módulo 1, estante alto',
@@ -500,9 +559,14 @@ export const sensores: Sensor[] = [
     firmware: 'v2.4.1',
     bateria: 95,
     senal: 93,
-    ultimaLectura: { fecha: '2026-09-24T10:42', valor: 24.8 },
-    rangoNormal: { min: 20, max: 28 },
-    ...crearSeries(101, 24, 3, 24.8),
+    mediciones: [
+      {
+        tipo: 'temperatura',
+        ultimaLectura: { fecha: '2026-09-24T10:42', valor: 24.8 },
+        rangoNormal: { min: 20, max: 28 },
+        ...crearSeries(101, 24, 3, 24.8),
+      },
+    ],
     revisiones: [
       { fecha: '2026-09-12', tecnico: 'A. Ríos', detalle: 'Calibración de rutina' },
       { fecha: '2026-08-01', tecnico: 'A. Ríos', detalle: 'Instalación en módulo de aclimatación' },
@@ -512,7 +576,6 @@ export const sensores: Sensor[] = [
     id: 'sn-011',
     codigo: 'SNS-011',
     nombre: 'Higrómetro de aclimatación',
-    tipo: 'humedad_aire',
     sectorId: 'sec-d',
     plantacionId: 'pla-4',
     ubicacionDetalle: 'Módulo 2, estante bajo',
@@ -524,9 +587,14 @@ export const sensores: Sensor[] = [
     firmware: 'v2.4.0',
     bateria: 0,
     senal: 0,
-    ultimaLectura: { fecha: '2026-09-21T07:15', valor: 61 },
-    rangoNormal: { min: 55, max: 75 },
-    ...crearSeries(113, 61, 8, 61),
+    mediciones: [
+      {
+        tipo: 'humedad_aire',
+        ultimaLectura: { fecha: '2026-09-21T07:15', valor: 61 },
+        rangoNormal: { min: 55, max: 75 },
+        ...crearSeries(113, 61, 8, 61),
+      },
+    ],
     revisiones: [
       {
         fecha: '2026-08-20',
@@ -540,7 +608,6 @@ export const sensores: Sensor[] = [
     id: 'sn-012',
     codigo: 'SNS-012',
     nombre: 'Termopar de ambiente',
-    tipo: 'temperatura',
     sectorId: 'sec-c',
     plantacionId: 'pla-3',
     ubicacionDetalle: 'Mesa central, altura de dosel',
@@ -552,9 +619,14 @@ export const sensores: Sensor[] = [
     firmware: 'v2.4.1',
     bateria: 81,
     senal: 86,
-    ultimaLectura: { fecha: '2026-09-24T10:44', valor: 22.6 },
-    rangoNormal: { min: 18, max: 26 },
-    ...crearSeries(127, 22.5, 3.5, 22.6),
+    mediciones: [
+      {
+        tipo: 'temperatura',
+        ultimaLectura: { fecha: '2026-09-24T10:44', valor: 22.6 },
+        rangoNormal: { min: 18, max: 26 },
+        ...crearSeries(127, 22.5, 3.5, 22.6),
+      },
+    ],
     revisiones: [
       {
         fecha: '2026-09-10',
@@ -568,7 +640,6 @@ export const sensores: Sensor[] = [
     id: 'sn-013',
     codigo: 'SNS-013',
     nombre: 'Higrómetro ambiental',
-    tipo: 'humedad_aire',
     sectorId: 'sec-c',
     plantacionId: 'pla-3',
     ubicacionDetalle: 'Pasillo central, altura de dosel',
@@ -580,9 +651,14 @@ export const sensores: Sensor[] = [
     firmware: 'v2.4.1',
     bateria: 74,
     senal: 83,
-    ultimaLectura: { fecha: '2026-09-24T10:40', valor: 64 },
-    rangoNormal: { min: 55, max: 75 },
-    ...crearSeries(131, 64, 9, 64),
+    mediciones: [
+      {
+        tipo: 'humedad_aire',
+        ultimaLectura: { fecha: '2026-09-24T10:40', valor: 64 },
+        rangoNormal: { min: 55, max: 75 },
+        ...crearSeries(131, 64, 9, 64),
+      },
+    ],
     revisiones: [
       {
         fecha: '2026-09-10',
@@ -593,97 +669,9 @@ export const sensores: Sensor[] = [
     ],
   },
   {
-    id: 'sn-014',
-    codigo: 'SNS-014',
-    nombre: 'Sensor de conductividad – Tanque Norte',
-    tipo: 'ec',
-    sectorId: 'sec-c',
-    plantacionId: 'pla-3',
-    ubicacionDetalle: 'Tanque Norte · Bancada 1',
-    tanqueId: 'tq-norte',
-    estado: 'operativo',
-    ultimaRevision: '2026-09-10',
-    tecnicoRevision: 'M. Fernández',
-    proximaRevision: '2026-12-10',
-    instalado: '2026-05-11',
-    firmware: 'v2.4.1',
-    bateria: 76,
-    senal: 85,
-    ultimaLectura: { fecha: '2026-09-24T10:41', valor: 1.9 },
-    rangoNormal: { min: 1.4, max: 2.6 },
-    ...crearSeries(141, 1.9, 0.4, 1.9),
-    revisiones: [
-      { fecha: '2026-09-10', tecnico: 'M. Fernández', detalle: 'Verificación con solución patrón' },
-      {
-        fecha: '2026-05-11',
-        tecnico: 'A. Ríos',
-        detalle: 'Instalación en línea del tanque de nutrientes',
-      },
-    ],
-  },
-  {
-    id: 'sn-015',
-    codigo: 'SNS-015',
-    nombre: 'Sonda de pH – Tanque Sur',
-    tipo: 'ph',
-    sectorId: 'sec-c',
-    plantacionId: 'pla-3',
-    ubicacionDetalle: 'Tanque Sur · Bancada 2',
-    tanqueId: 'tq-sur',
-    estado: 'operativo',
-    ultimaRevision: '2026-09-10',
-    tecnicoRevision: 'M. Fernández',
-    proximaRevision: '2026-12-10',
-    instalado: '2026-05-11',
-    firmware: 'v2.4.1',
-    bateria: 69,
-    senal: 80,
-    ultimaLectura: { fecha: '2026-09-24T10:43', valor: 5.7 },
-    rangoNormal: { min: 5.5, max: 6.5 },
-    ...crearSeries(149, 5.8, 0.5, 5.7),
-    revisiones: [
-      {
-        fecha: '2026-09-10',
-        tecnico: 'M. Fernández',
-        detalle: 'Calibración con soluciones pH 4.0 y 7.0',
-      },
-      { fecha: '2026-05-11', tecnico: 'A. Ríos', detalle: 'Instalación y alta en la red LoRaWAN' },
-    ],
-  },
-  {
-    id: 'sn-016',
-    codigo: 'SNS-016',
-    nombre: 'Sensor de nivel – Tanque Sur',
-    tipo: 'nivel_tanque',
-    sectorId: 'sec-c',
-    plantacionId: 'pla-3',
-    ubicacionDetalle: 'Tanque Sur · Bancada 2',
-    tanqueId: 'tq-sur',
-    estado: 'operativo',
-    ultimaRevision: '2026-09-10',
-    tecnicoRevision: 'L. Ortiz',
-    proximaRevision: '2026-12-10',
-    instalado: '2026-05-11',
-    firmware: 'v2.4.1',
-    bateria: 66,
-    senal: 78,
-    ultimaLectura: { fecha: '2026-09-24T10:45', valor: 48 },
-    rangoNormal: { min: 20, max: 100 },
-    ...crearSeries(151, 55, 25, 48),
-    revisiones: [
-      {
-        fecha: '2026-09-10',
-        tecnico: 'L. Ortiz',
-        detalle: 'Purga de conducto y prueba de flotador',
-      },
-      { fecha: '2026-05-11', tecnico: 'A. Ríos', detalle: 'Instalación en tanque de nutrientes' },
-    ],
-  },
-  {
     id: 'sn-017',
     codigo: 'SNS-017',
-    nombre: 'Sonda de pH – Tanque de respaldo',
-    tipo: 'ph',
+    nombre: 'Dispositivo multi-sensor · Tanque de respaldo',
     sectorId: 'sec-c',
     plantacionId: 'pla-3',
     ubicacionDetalle: 'Tanque de respaldo · Bancada 2',
@@ -696,62 +684,123 @@ export const sensores: Sensor[] = [
     firmware: 'v2.4.1',
     bateria: 58,
     senal: 71,
-    ultimaLectura: { fecha: '2026-09-24T10:42', valor: 6.1 },
-    rangoNormal: { min: 5.5, max: 6.5 },
-    ...crearSeries(157, 6.0, 0.5, 6.1),
+    mediciones: [
+      {
+        tipo: 'ph',
+        ultimaLectura: { fecha: '2026-09-24T10:42', valor: 6.1 },
+        rangoNormal: { min: 5.5, max: 6.5 },
+        ...crearSeries(157, 6.0, 0.5, 6.1),
+      },
+      {
+        tipo: 'ec',
+        ultimaLectura: { fecha: '2026-09-24T10:40', valor: 2.3 },
+        rangoNormal: { min: 1.4, max: 2.6 },
+        ...crearSeries(163, 2.2, 0.4, 2.3),
+      },
+      {
+        tipo: 'nivel_tanque',
+        ultimaLectura: { fecha: '2026-09-24T10:46', valor: 12 },
+        rangoNormal: { min: 20, max: 100 },
+        ...crearSeries(167, 35, 25, 12),
+      },
+    ],
     revisiones: [
       { fecha: '2026-09-08', tecnico: 'M. Fernández', detalle: 'Calibración de electrodos' },
       { fecha: '2026-05-11', tecnico: 'A. Ríos', detalle: 'Instalación en tanque de respaldo' },
     ],
   },
   {
-    id: 'sn-018',
-    codigo: 'SNS-018',
-    nombre: 'Sensor de conductividad – Tanque de respaldo',
-    tipo: 'ec',
-    sectorId: 'sec-c',
-    plantacionId: 'pla-3',
-    ubicacionDetalle: 'Tanque de respaldo · Bancada 2',
-    tanqueId: 'tq-respaldo',
+    id: 'sn-020',
+    codigo: 'SNS-020',
+    nombre: 'Dispositivo multi-sensor · Tanque A',
+    sectorId: 'sec-a',
+    plantacionId: 'pla-1',
+    ubicacionDetalle: 'Tanque A · Bancada Norte',
+    tanqueId: 'tq-a',
     estado: 'operativo',
-    ultimaRevision: '2026-09-08',
+    ultimaRevision: '2026-09-05',
     tecnicoRevision: 'M. Fernández',
-    proximaRevision: '2026-12-08',
-    instalado: '2026-05-11',
+    proximaRevision: '2026-12-05',
+    instalado: '2026-03-18',
     firmware: 'v2.4.1',
-    bateria: 55,
-    senal: 70,
-    ultimaLectura: { fecha: '2026-09-24T10:40', valor: 2.3 },
-    rangoNormal: { min: 1.4, max: 2.6 },
-    ...crearSeries(163, 2.2, 0.4, 2.3),
+    bateria: 88,
+    senal: 87,
+    mediciones: [
+      {
+        tipo: 'ph',
+        ultimaLectura: { fecha: '2026-09-24T10:42', valor: 5.9 },
+        rangoNormal: { min: 5.5, max: 6.5 },
+        ...crearSeries(211, 5.9, 0.5, 5.9),
+      },
+      {
+        tipo: 'ec',
+        ultimaLectura: { fecha: '2026-09-24T10:41', valor: 1.6 },
+        rangoNormal: { min: 1.2, max: 2.4 },
+        ...crearSeries(223, 1.6, 0.5, 1.6),
+      },
+      {
+        tipo: 'nivel_tanque',
+        ultimaLectura: { fecha: '2026-09-24T10:45', valor: 72 },
+        rangoNormal: { min: 20, max: 100 },
+        ...crearSeries(227, 70, 15, 72),
+      },
+    ],
     revisiones: [
-      { fecha: '2026-09-08', tecnico: 'M. Fernández', detalle: 'Verificación con solución patrón' },
-      { fecha: '2026-05-11', tecnico: 'A. Ríos', detalle: 'Instalación en tanque de respaldo' },
+      {
+        fecha: '2026-09-05',
+        tecnico: 'M. Fernández',
+        detalle: 'Calibración de sondas y verificación de nivel',
+      },
+      { fecha: '2026-03-18', tecnico: 'A. Ríos', detalle: 'Instalación en tanque de nutrientes' },
     ],
   },
   {
-    id: 'sn-019',
-    codigo: 'SNS-019',
-    nombre: 'Sensor de nivel – Tanque de respaldo',
-    tipo: 'nivel_tanque',
-    sectorId: 'sec-c',
-    plantacionId: 'pla-3',
-    ubicacionDetalle: 'Tanque de respaldo · Bancada 2',
-    tanqueId: 'tq-respaldo',
+    id: 'sn-021',
+    codigo: 'SNS-021',
+    nombre: 'Dispositivo multi-sensor · Tanque B',
+    sectorId: 'sec-b',
+    plantacionId: 'pla-2',
+    ubicacionDetalle: 'Tanque B · Bancada Sur',
+    tanqueId: 'tq-b',
     estado: 'operativo',
-    ultimaRevision: '2026-09-08',
-    tecnicoRevision: 'L. Ortiz',
-    proximaRevision: '2026-12-08',
-    instalado: '2026-05-11',
+    ultimaRevision: '2026-08-30',
+    tecnicoRevision: 'A. Ríos',
+    proximaRevision: '2026-11-30',
+    instalado: '2026-04-02',
     firmware: 'v2.4.1',
-    bateria: 44,
-    senal: 72,
-    ultimaLectura: { fecha: '2026-09-24T10:46', valor: 12 },
-    rangoNormal: { min: 20, max: 100 },
-    ...crearSeries(167, 35, 25, 12),
+    bateria: 84,
+    senal: 89,
+    mediciones: [
+      {
+        tipo: 'ph',
+        ultimaLectura: { fecha: '2026-09-24T10:43', valor: 6.0 },
+        rangoNormal: { min: 5.5, max: 6.5 },
+        ...crearSeries(233, 6.0, 0.5, 6.0),
+      },
+      {
+        tipo: 'ec',
+        ultimaLectura: { fecha: '2026-09-24T10:41', valor: 1.8 },
+        rangoNormal: { min: 1.4, max: 2.6 },
+        ...crearSeries(239, 1.8, 0.5, 1.8),
+      },
+      {
+        tipo: 'nivel_tanque',
+        ultimaLectura: { fecha: '2026-09-24T10:46', valor: 65 },
+        rangoNormal: { min: 20, max: 100 },
+        ...crearSeries(241, 65, 15, 65),
+      },
+    ],
     revisiones: [
-      { fecha: '2026-09-08', tecnico: 'L. Ortiz', detalle: 'Purga y recalibración del flotador' },
-      { fecha: '2026-05-11', tecnico: 'A. Ríos', detalle: 'Instalación en tanque de respaldo' },
+      {
+        fecha: '2026-08-30',
+        tecnico: 'A. Ríos',
+        detalle: 'Calibración de sondas y prueba de bomba',
+      },
+      {
+        fecha: '2026-04-02',
+        tecnico: 'A. Ríos',
+        detalle: 'Instalación y emparejamiento con gateway',
+      },
     ],
   },
 ]
@@ -764,8 +813,19 @@ export function plantacionPorId(id: string): Plantacion | undefined {
   return plantaciones.find((plantacion) => plantacion.id === id)
 }
 
-export function sensorPorId(id: string): Sensor | undefined {
-  return sensores.find((sensor) => sensor.id === id)
+export function dispositivoPorId(id: string): Dispositivo | undefined {
+  return dispositivos.find((dispositivo) => dispositivo.id === id)
+}
+
+export function medicionPorTipo(dispositivo: Dispositivo, tipo: SensorTipo): Medicion | undefined {
+  return dispositivo.mediciones.find((medicion) => medicion.tipo === tipo)
+}
+
+export function fechaUltimaLectura(dispositivo: Dispositivo): string {
+  return dispositivo.mediciones.reduce(
+    (max, medicion) => (medicion.ultimaLectura.fecha > max ? medicion.ultimaLectura.fecha : max),
+    '',
+  )
 }
 
 export function tanquePorId(id: string): Tanque | undefined {
@@ -776,30 +836,26 @@ export function tanquesDeInvernadero(invernadero: string): Tanque[] {
   return tanques.filter((tanque) => sectorPorId(tanque.sectorId)?.invernadero === invernadero)
 }
 
-export interface SensoresDelTanque {
-  nivel: Sensor
-  ph: Sensor
-  ec: Sensor
+export function dispositivoDelTanque(tanque: Tanque): Dispositivo | undefined {
+  return dispositivoPorId(tanque.dispositivoId)
 }
 
-export function sensoresDelTanque(tanque: Tanque): SensoresDelTanque | undefined {
-  const nivel = sensorPorId(tanque.sensorNivelId)
-  const ph = sensorPorId(tanque.sensorPhId)
-  const ec = sensorPorId(tanque.sensorEcId)
-  if (!nivel || !ph || !ec) return undefined
-  return { nivel, ph, ec }
+export function medicionEnAlerta(dispositivo: Dispositivo, medicion: Medicion): boolean {
+  if (dispositivo.estado === 'sin_conexion' || dispositivo.estado === 'fuera_servicio') {
+    return false
+  }
+  const { valor } = medicion.ultimaLectura
+  return valor < medicion.rangoNormal.min || valor > medicion.rangoNormal.max
 }
 
-export function enAlerta(sensor: Sensor): boolean {
-  if (sensor.estado === 'sin_conexion' || sensor.estado === 'fuera_servicio') return false
-  const { valor } = sensor.ultimaLectura
-  return valor < sensor.rangoNormal.min || valor > sensor.rangoNormal.max
+export function enAlerta(dispositivo: Dispositivo): boolean {
+  return dispositivo.mediciones.some((medicion) => medicionEnAlerta(dispositivo, medicion))
 }
 
-export function revisionVencida(sensor: Sensor): boolean {
-  return sensor.proximaRevision < hoy
+export function revisionVencida(dispositivo: Dispositivo): boolean {
+  return dispositivo.proximaRevision < hoy
 }
 
-export function bateriaBaja(sensor: Sensor): boolean {
-  return sensor.bateria <= 20
+export function bateriaBaja(dispositivo: Dispositivo): boolean {
+  return dispositivo.bateria <= 20
 }

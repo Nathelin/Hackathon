@@ -1,8 +1,8 @@
 <template>
   <AdminLayout>
-    <PageBreadcrumb pageTitle="Detalle del sensor" />
+    <PageBreadcrumb pageTitle="Detalle del dispositivo" />
 
-    <div v-if="sensor" class="space-y-5 sm:space-y-6">
+    <div v-if="dispositivo" class="space-y-5 sm:space-y-6">
       <div
         class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] sm:p-6"
       >
@@ -18,76 +18,52 @@
           <div>
             <div class="flex flex-wrap items-center gap-3">
               <h2 class="text-title-xl font-semibold text-gray-800 dark:text-white/90">
-                {{ sensor.codigo }}
+                {{ dispositivo.codigo }}
               </h2>
-              <EstadoSensor :estado="sensor.estado" :alerta="enAlerta(sensor)" />
+              <EstadoSensor :estado="dispositivo.estado" :alerta="enAlerta(dispositivo)" />
             </div>
             <p class="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">
-              {{ sensor.nombre }} · {{ tipoSensor[sensor.tipo].label }}
+              {{ dispositivo.nombre }} · {{ etiquetasMediciones }}
             </p>
           </div>
 
           <p class="text-theme-sm text-gray-500 dark:text-gray-400">
-            Última lectura: {{ formatoFechaHora(sensor.ultimaLectura.fecha) }}
+            Última lectura: {{ formatoFechaHora(fechaUltimaLectura(dispositivo)) }}
           </p>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 md:gap-6">
+      <!--div class="grid grid-cols-1 gap-4 sm:grid-cols-3 md:gap-6">
         <div
           class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6"
         >
-          <p class="text-theme-sm text-gray-500 dark:text-gray-400">Valor actual</p>
+          <p class="text-theme-sm text-gray-500 dark:text-gray-400">Mediciones</p>
           <div class="mt-2 flex items-baseline gap-1.5">
             <h4 class="text-title-lg font-bold text-gray-800 dark:text-white/90">
-              {{ sensor.ultimaLectura.valor }}
+              {{ dispositivo.mediciones.length }}
             </h4>
             <span class="text-theme-sm text-gray-500 dark:text-gray-400">
-              {{ tipoSensor[sensor.tipo].unidad }}
-            </span>
-          </div>
-          <p
-            :class="[
-              'mt-1 text-theme-xs font-medium',
-              enAlerta(sensor)
-                ? 'text-error-600 dark:text-error-500'
-                : 'text-success-600 dark:text-success-500',
-            ]"
-          >
-            {{ enAlerta(sensor) ? 'Fuera del rango normal' : 'Dentro del rango normal' }}
-          </p>
-        </div>
-
-        <div
-          class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6"
-        >
-          <p class="text-theme-sm text-gray-500 dark:text-gray-400">Rango normal</p>
-          <div class="mt-2 flex items-baseline gap-1.5">
-            <h4 class="text-title-lg font-bold text-gray-800 dark:text-white/90">
-              {{ sensor.rangoNormal.min }} – {{ sensor.rangoNormal.max }}
-            </h4>
-            <span class="text-theme-sm text-gray-500 dark:text-gray-400">
-              {{ tipoSensor[sensor.tipo].unidad }}
+              {{ dispositivo.mediciones.length === 1 ? 'sensor' : 'sensores' }}
             </span>
           </div>
           <p class="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
-            Umbral configurado para {{ tipoSensor[sensor.tipo].label }}
+            {{ etiquetasMediciones }}
           </p>
         </div>
 
-        <div
+        <!--div
           class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6"
         >
           <p class="text-theme-sm text-gray-500 dark:text-gray-400">Batería</p>
           <div class="mt-2 flex items-baseline gap-1.5">
-            <h4 :class="['text-title-lg font-bold', claseBateria(sensor.bateria)]">
-              {{ sensor.bateria }}%
+            <h4 :class="['text-title-lg font-bold', claseBateria(dispositivo.bateria)]">
+              {{ dispositivo.bateria }}%
             </h4>
           </div>
           <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
             <div
-              :class="['h-full rounded-full', claseBarra(sensor.bateria)]"
-              :style="{ width: sensor.bateria + '%' }"
+              :class="['h-full rounded-full', claseBarra(dispositivo.bateria)]"
+              :style="{ width: dispositivo.bateria + '%' }"
             ></div>
           </div>
         </div>
@@ -98,14 +74,14 @@
           <p class="text-theme-sm text-gray-500 dark:text-gray-400">Señal</p>
           <div class="mt-2 flex items-baseline gap-1.5">
             <h4 class="text-title-lg font-bold text-gray-800 dark:text-white/90">
-              {{ sensor.senal }}%
+              {{ dispositivo.senal }}%
             </h4>
           </div>
           <p class="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
-            {{ sensor.senal === 0 ? 'Sin enlace con el gateway' : 'Conectado por LoRaWAN' }}
+            {{ dispositivo.senal === 0 ? 'Sin enlace con el gateway' : 'Conectado por LoRaWAN' }}
           </p>
         </div>
-      </div>
+      </div-->
 
       <div class="grid grid-cols-12 gap-4 md:gap-6">
         <div class="col-span-12 xl:col-span-8">
@@ -114,10 +90,11 @@
           >
             <div class="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Lecturas</h3>
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
+                  Qué está leyendo el dispositivo
+                </h3>
                 <p class="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">
-                  {{ tipoSensor[sensor.tipo].label }} en
-                  {{ sectorPorId(sensor.sectorId)?.nombre }}
+                  {{ etiquetasMediciones }} en {{ ubicacionDispositivo }}
                 </p>
               </div>
 
@@ -141,15 +118,62 @@
               </div>
             </div>
 
-            <LecturaChart
-              :etiquetas="etiquetasGrafico"
-              :datos="datosGrafico"
-              :unidad="tipoSensor[sensor.tipo].unidad"
-              :min="sensor.rangoNormal.min"
-              :max="sensor.rangoNormal.max"
-              :serie="tipoSensor[sensor.tipo].label"
-              :altura="320"
-            />
+            <div class="space-y-6">
+              <section
+                v-for="(medicion, index) in dispositivo.mediciones"
+                :key="medicion.tipo"
+                :class="[index > 0 ? 'border-t border-gray-100 pt-6 dark:border-gray-800' : '']"
+              >
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h4 class="text-base font-semibold text-gray-800 dark:text-white/90">
+                      {{ tipoSensor[medicion.tipo].label }}
+                    </h4>
+                    <p class="mt-0.5 text-theme-xs text-gray-500 dark:text-gray-400">
+                      Rango {{ medicion.rangoNormal.min }} – {{ medicion.rangoNormal.max }}
+                      {{ tipoSensor[medicion.tipo].unidad }} · lectura
+                      {{ formatoHora(medicion.ultimaLectura.fecha) }}
+                    </p>
+                  </div>
+
+                  <div class="flex items-baseline gap-1.5">
+                    <span class="text-title-md font-bold text-gray-800 dark:text-white/90">
+                      {{ medicion.ultimaLectura.valor }}
+                    </span>
+                    <span class="text-theme-sm text-gray-500 dark:text-gray-400">
+                      {{ tipoSensor[medicion.tipo].unidad }}
+                    </span>
+                  </div>
+                </div>
+
+                <p
+                  :class="[
+                    'mt-1 text-theme-xs font-medium',
+                    medicionEnAlerta(dispositivo, medicion)
+                      ? 'text-error-600 dark:text-error-500'
+                      : 'text-success-600 dark:text-success-500',
+                  ]"
+                >
+                  {{
+                    medicionEnAlerta(dispositivo, medicion)
+                      ? 'Fuera del rango normal'
+                      : 'Dentro del rango normal'
+                  }}
+                </p>
+
+                <div class="mt-3">
+                  <LecturaChart
+                    :etiquetas="etiquetasGrafico"
+                    :datos="datosDe(medicion)"
+                    :unidad="tipoSensor[medicion.tipo].unidad"
+                    :min="medicion.rangoNormal.min"
+                    :max="medicion.rangoNormal.max"
+                    :serie="tipoSensor[medicion.tipo].label"
+                    :altura="260"
+                  />
+                </div>
+              </section>
+            </div>
           </div>
         </div>
 
@@ -219,17 +243,17 @@
                 Historial de revisiones
               </h3>
               <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {{ sensor.revisiones.length }} intervenciones registradas
+                {{ dispositivo.revisiones.length }} intervenciones registradas
               </p>
             </div>
 
             <ul class="border-t border-gray-100 px-6 py-4 dark:border-gray-800">
               <li
-                v-for="(revision, index) in sensor.revisiones"
+                v-for="(revision, index) in dispositivo.revisiones"
                 :key="revision.fecha"
                 :class="[
                   'relative border-s border-gray-200 ps-6 dark:border-gray-800',
-                  index === sensor.revisiones.length - 1 ? 'pb-0' : 'pb-5',
+                  index === dispositivo.revisiones.length - 1 ? 'pb-0' : 'pb-5',
                 ]"
               >
                 <span
@@ -253,7 +277,7 @@
       class="rounded-2xl border border-gray-200 bg-white px-6 py-12 text-center dark:border-gray-800 dark:bg-white/[0.03]"
     >
       <p class="text-title-md font-semibold text-gray-800 dark:text-white/90">
-        No encontramos ese sensor
+        No encontramos ese dispositivo
       </p>
       <p class="mt-2 text-theme-sm text-gray-500 dark:text-gray-400">
         El identificador no corresponde a ningún dispositivo registrado.
@@ -277,23 +301,28 @@ import EstadoSensor from '@/components/sensores/EstadoSensor.vue'
 import LecturaChart from '@/components/sensores/LecturaChart.vue'
 import ChevronRightIcon from '@/icons/ChevronRightIcon.vue'
 import {
+  bombaEstado,
   diasDesde,
+  dispositivoPorId,
   enAlerta,
   etiquetas24h,
   etiquetas7d,
+  fechaUltimaLectura,
   formatoFecha,
   formatoFechaHora,
+  formatoHora,
+  medicionEnAlerta,
   plantacionPorId,
   revisionVencida,
   sectorPorId,
-  sensorPorId,
   tanquePorId,
   tipoSensor,
+  type Medicion,
 } from '@/data/mockSensores'
 
 const route = useRoute()
 
-const sensor = computed(() => sensorPorId(String(route.params.id)))
+const dispositivo = computed(() => dispositivoPorId(String(route.params.id)))
 const rangoGrafico = ref<'24h' | 'd7'>('24h')
 
 const rangosGrafico = [
@@ -303,21 +332,35 @@ const rangosGrafico = [
 
 const etiquetasGrafico = computed(() => (rangoGrafico.value === '24h' ? etiquetas24h : etiquetas7d))
 
-const datosGrafico = computed(() => {
-  const actual = sensor.value
-  if (!actual) return []
-  return rangoGrafico.value === '24h' ? actual.serie24h : actual.serie7d
+const etiquetasMediciones = computed(() =>
+  (dispositivo.value?.mediciones ?? [])
+    .map((medicion) => tipoSensor[medicion.tipo].label)
+    .join(' · '),
+)
+
+const ubicacionDispositivo = computed(() => {
+  const actual = dispositivo.value
+  if (!actual) return ''
+  const sector = sectorPorId(actual.sectorId)
+  return sector?.nombre || sector?.invernadero || '—'
 })
 
+function datosDe(medicion: Medicion) {
+  return rangoGrafico.value === '24h' ? medicion.serie24h : medicion.serie7d
+}
+
 const fichaTecnica = computed(() => {
-  const actual = sensor.value
+  const actual = dispositivo.value
   if (!actual) return []
   return [
     { etiqueta: 'Código', valor: actual.codigo },
-    { etiqueta: 'Tipo', valor: tipoSensor[actual.tipo].label },
+    { etiqueta: 'Mediciones', valor: etiquetasMediciones.value },
     { etiqueta: 'Firmware', valor: actual.firmware },
     { etiqueta: 'Instalado el', valor: formatoFecha(actual.instalado) },
-    { etiqueta: 'Última lectura', valor: formatoFechaHora(actual.ultimaLectura.fecha) },
+    {
+      etiqueta: 'Última lectura',
+      valor: formatoFechaHora(fechaUltimaLectura(actual)),
+    },
     {
       etiqueta: 'Última revisión',
       valor: `${formatoFecha(actual.ultimaRevision)} · ${actual.tecnicoRevision}`,
@@ -331,7 +374,7 @@ const fichaTecnica = computed(() => {
 })
 
 const ubicacion = computed(() => {
-  const actual = sensor.value
+  const actual = dispositivo.value
   if (!actual) return []
   const sector = sectorPorId(actual.sectorId)
   const plantacion = plantacionPorId(actual.plantacionId)
@@ -342,6 +385,7 @@ const ubicacion = computed(() => {
           etiqueta: 'Tanque',
           valor: `${tanque.nombre} · ${tanque.cama} · ${tanque.capacidadLitros.toLocaleString('es-AR')} L`,
         },
+        { etiqueta: 'Bomba de agua', valor: bombaEstado[tanque.bomba].label },
       ]
     : []
   return [

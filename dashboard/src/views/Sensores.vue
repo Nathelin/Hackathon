@@ -26,10 +26,11 @@
         <div class="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
-              Inventario de sensores
+              Inventario de dispositivos
             </h3>
             <p class="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">
-              {{ sensoresFiltrados.length }} de {{ sensores.length }} dispositivos
+              {{ dispositivosFiltrados.length }} de {{ dispositivos.length }} dispositivos ·
+              {{ totalMediciones }} mediciones en total
             </p>
           </div>
 
@@ -74,7 +75,7 @@
             >
               <option value="">Todos los sectores</option>
               <option v-for="sector in sectores" :key="sector.id" :value="sector.id">
-                {{ sector.nombre }}
+                {{ sector.nombre || sector.invernadero }}
               </option>
             </select>
             <ChevronDownIcon
@@ -105,16 +106,18 @@
           :key="grupo.sector.id"
           class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
         >
-          <div class="border-b border-gray-100 px-4 py-4 dark:border-gray-800 sm:px-6 bg-blue-100 dark:bg-blue-950">
-            <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 "> 
+          <div
+            class="border-b border-gray-100 px-4 py-4 dark:border-gray-800 sm:px-6 bg-blue-100 dark:bg-blue-950"
+          >
+            <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
               <div class="flex flex-wrap items-center gap-2">
                 <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">
-                  {{ grupo.sector.nombre }}
+                  {{ grupo.sector.nombre || grupo.sector.invernadero }}
                 </h3>
                 <span
                   class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-theme-xs font-medium text-gray-700 dark:bg-white/5 dark:text-white/80"
                 >
-                  {{ grupo.sensores.length }} sensores
+                  {{ grupo.dispositivos.length }} dispositivos
                 </span>
               </div>
 
@@ -157,74 +160,58 @@
 
               <tbody>
                 <tr
-                  v-for="sensor in grupo.sensores"
-                  :key="sensor.id"
+                  v-for="dispositivo in grupo.dispositivos"
+                  :key="dispositivo.id"
                   class="cursor-pointer border-b border-gray-100 transition last:border-0 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-white/[0.02]"
-                  @click="irAlDetalle(sensor.id)"
+                  @click="irAlDetalle(dispositivo.id)"
                 >
                   <td class="py-3 ps-4 pe-4 sm:ps-6">
                     <router-link
-                      :to="{ name: 'SensorDetalle', params: { id: sensor.id } }"
+                      :to="{ name: 'SensorDetalle', params: { id: dispositivo.id } }"
                       class="block"
                       @click.stop
                     >
                       <p class="text-theme-sm font-medium text-gray-800 dark:text-white/90">
-                        {{ sensor.codigo }}
+                        {{ dispositivo.codigo }}
                         <span class="font-normal text-gray-500 dark:text-gray-400">
-                          · {{ sensor.nombre }}
+                          · {{ dispositivo.nombre }}
                         </span>
                       </p>
                       <span class="text-theme-xs text-gray-500 dark:text-gray-400">
-                        {{ tipoSensor[sensor.tipo].label }}
+                        {{ etiquetasMediciones(dispositivo) }}
                       </span>
                     </router-link>
                   </td>
 
                   <td class="py-3 pe-4 whitespace-nowrap">
                     <p class="text-theme-sm text-gray-500 dark:text-gray-400">
-                      {{ sensor.ubicacionDetalle }}
+                      {{ dispositivo.ubicacionDetalle }}
                     </p>
                   </td>
 
                   <td class="py-3 pe-4 whitespace-nowrap">
                     <p class="text-theme-sm text-gray-800 dark:text-white/90">
-                      {{ formatoFecha(sensor.ultimaRevision) }}
+                      {{ formatoFecha(dispositivo.ultimaRevision) }}
                     </p>
                     <span class="text-theme-xs text-gray-500 dark:text-gray-400">
-                      {{ sensor.tecnicoRevision }}
+                      {{ dispositivo.tecnicoRevision }}
                     </span>
                     <p
                       :class="[
                         'mt-0.5 text-theme-xs',
-                        revisionVencida(sensor)
+                        revisionVencida(dispositivo)
                           ? 'font-medium text-warning-600 dark:text-orange-400'
                           : 'text-gray-500 dark:text-gray-400',
                       ]"
                     >
-                      Próx. {{ formatoFecha(sensor.proximaRevision)
-                      }}{{ revisionVencida(sensor) ? ' · vencida' : '' }}
+                      Próx. {{ formatoFecha(dispositivo.proximaRevision)
+                      }}{{ revisionVencida(dispositivo) ? ' · vencida' : '' }}
                     </p>
-                  </td>
-
-                  <td class="py-3 pe-4">
-                    <EstadoSensor :estado="sensor.estado" :alerta="enAlerta(sensor)" />
                   </td>
 
                   <td class="py-3 pe-4 sm:pe-6">
                     <div class="flex items-center justify-between gap-3">
-                      <div class="flex items-center gap-2">
-                        <span :class="['text-theme-sm font-medium', claseBateria(sensor.bateria)]">
-                          {{ sensor.bateria }}%
-                        </span>
-                        <span
-                          class="hidden h-1.5 w-16 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800 sm:block"
-                        >
-                          <span
-                            :class="['block h-full rounded-full', claseBarra(sensor.bateria)]"
-                            :style="{ width: sensor.bateria + '%' }"
-                          ></span>
-                        </span>
-                      </div>
+                      <EstadoSensor :estado="dispositivo.estado" :alerta="enAlerta(dispositivo)" />
                       <ChevronRightIcon class="h-4 w-4 shrink-0 text-gray-400 rtl:rotate-180" />
                     </div>
                   </td>
@@ -240,7 +227,7 @@
         class="rounded-2xl border border-gray-200 bg-white px-6 py-12 text-center dark:border-gray-800 dark:bg-white/[0.03]"
       >
         <p class="text-theme-base font-medium text-gray-800 dark:text-white/90">
-          No hay sensores que coincidan con los filtros.
+          No hay dispositivos que coincidan con los filtros.
         </p>
         <button
           type="button"
@@ -264,14 +251,15 @@ import ChevronDownIcon from '@/icons/ChevronDownIcon.vue'
 import ChevronRightIcon from '@/icons/ChevronRightIcon.vue'
 import {
   diasDesde,
+  dispositivos,
   enAlerta,
   estadoSensor,
   formatoFecha,
   revisionVencida,
-  sensores,
   sectores,
   tipoSensor,
   plantaciones,
+  type Dispositivo,
 } from '@/data/mockSensores'
 
 const router = useRouter()
@@ -280,37 +268,41 @@ const busqueda = ref('')
 const filtroSector = ref('')
 const filtroEstado = ref('')
 
-const columnas = ['Sensor', 'Ubicación', 'Última revisión', 'Estado', 'Batería']
+const columnas = ['Dispositivo', 'Ubicación', 'Última revisión', 'Estado']
+
+const totalMediciones = computed(() =>
+  dispositivos.reduce((total, dispositivo) => total + dispositivo.mediciones.length, 0),
+)
 
 const kpis = computed(() => [
   {
-    etiqueta: 'Sensores totales',
-    valor: sensores.length,
-    nota: `${sectores.length} sectores · ${plantaciones.length} plantaciones`,
+    etiqueta: 'Dispositivos totales',
+    valor: dispositivos.length,
+    nota: `${sectores.length} sectores · ${totalMediciones.value} mediciones`,
     tono: 'brand',
   },
   {
     etiqueta: 'Operativos',
-    valor: sensores.filter((sensor) => sensor.estado === 'operativo').length,
+    valor: dispositivos.filter((dispositivo) => dispositivo.estado === 'operativo').length,
     nota: 'con lectura activa',
     tono: 'success',
   },
   {
     etiqueta: 'Requieren revisión',
-    valor: sensores.filter((sensor) => sensor.estado === 'revision').length,
+    valor: dispositivos.filter((dispositivo) => dispositivo.estado === 'revision').length,
     nota: 'con mantenimiento vencido',
     tono: 'warning',
   },
   {
     etiqueta: 'Sin conexión',
-    valor: sensores.filter((sensor) => sensor.estado === 'sin_conexion').length,
+    valor: dispositivos.filter((dispositivo) => dispositivo.estado === 'sin_conexion').length,
     nota: 'sin reportar señal',
     tono: 'info',
   },
   {
     etiqueta: 'Alertas de umbral',
-    valor: sensores.filter((sensor) => enAlerta(sensor)).length,
-    nota: 'valor fuera de rango',
+    valor: dispositivos.filter((dispositivo) => enAlerta(dispositivo)).length,
+    nota: 'alguna medición fuera de rango',
     tono: 'error',
   },
 ])
@@ -336,14 +328,15 @@ const hayFiltros = computed(
   () => busqueda.value.trim() !== '' || filtroSector.value !== '' || filtroEstado.value !== '',
 )
 
-const sensoresFiltrados = computed(() => {
+const dispositivosFiltrados = computed(() => {
   const texto = busqueda.value.trim().toLowerCase()
-  return sensores.filter((sensor) => {
-    const coincideSector = filtroSector.value === '' || sensor.sectorId === filtroSector.value
-    const coincideEstado = filtroEstado.value === '' || sensor.estado === filtroEstado.value
-    const coincideTexto =
-      texto === '' ||
-      `${sensor.codigo} ${sensor.nombre} ${sensor.ubicacionDetalle}`.toLowerCase().includes(texto)
+  return dispositivos.filter((dispositivo) => {
+    const coincideSector = filtroSector.value === '' || dispositivo.sectorId === filtroSector.value
+    const coincideEstado = filtroEstado.value === '' || dispositivo.estado === filtroEstado.value
+    const textoDispositivo = `${dispositivo.codigo} ${dispositivo.nombre} ${
+      dispositivo.ubicacionDetalle
+    } ${dispositivo.mediciones.map((medicion) => tipoSensor[medicion.tipo].label).join(' ')}`
+    const coincideTexto = texto === '' || textoDispositivo.toLowerCase().includes(texto)
     return coincideSector && coincideEstado && coincideTexto
   })
 })
@@ -351,7 +344,7 @@ const sensoresFiltrados = computed(() => {
 type GrupoSector = {
   sector: (typeof sectores)[number]
   plantaciones: typeof plantaciones
-  sensores: typeof sensores
+  dispositivos: Dispositivo[]
 }
 
 const grupos = computed<GrupoSector[]>(() =>
@@ -359,15 +352,21 @@ const grupos = computed<GrupoSector[]>(() =>
     .map((sector) => ({
       sector,
       plantaciones: plantaciones.filter((plantacion) => plantacion.sectorId === sector.id),
-      sensores: sensoresFiltrados.value.filter((sensor) => sensor.sectorId === sector.id),
+      dispositivos: dispositivosFiltrados.value.filter(
+        (dispositivo) => dispositivo.sectorId === sector.id,
+      ),
     }))
-    .filter((grupo) => grupo.sensores.length > 0),
+    .filter((grupo) => grupo.dispositivos.length > 0),
 )
 
+function etiquetasMediciones(dispositivo: Dispositivo) {
+  return dispositivo.mediciones.map((medicion) => tipoSensor[medicion.tipo].label).join(' · ')
+}
+
 function resumenSector(grupo: GrupoSector) {
-  const contar = (estado: (typeof sensores)[number]['estado']) =>
-    grupo.sensores.filter((sensor) => sensor.estado === estado).length
-  const alertas = grupo.sensores.filter((sensor) => enAlerta(sensor)).length
+  const contar = (estado: Dispositivo['estado']) =>
+    grupo.dispositivos.filter((dispositivo) => dispositivo.estado === estado).length
+  const alertas = grupo.dispositivos.filter((dispositivo) => enAlerta(dispositivo)).length
 
   return [
     { etiqueta: 'operativos', valor: contar('operativo'), tono: 'success' },
@@ -385,7 +384,7 @@ function resumenSector(grupo: GrupoSector) {
 function plantacionesTexto(grupo: GrupoSector) {
   return grupo.plantaciones.map(
     (plantacion) =>
-      `${plantacion.cultivo} · var. ${plantacion.variedad} · siembra ${formatoFecha(
+      `${plantacion.cultivo} · siembra ${formatoFecha(
         plantacion.fechaSiembra,
       )} (${diasDesde(plantacion.fechaSiembra)} días de ciclo)`,
   )
@@ -399,17 +398,5 @@ function limpiarFiltros() {
 
 function irAlDetalle(id: string) {
   router.push({ name: 'SensorDetalle', params: { id } })
-}
-
-function claseBateria(bateria: number) {
-  if (bateria <= 20) return 'text-error-600 dark:text-error-500'
-  if (bateria <= 50) return 'text-warning-600 dark:text-orange-400'
-  return 'text-gray-600 dark:text-gray-300'
-}
-
-function claseBarra(bateria: number) {
-  if (bateria <= 20) return 'bg-error-500'
-  if (bateria <= 50) return 'bg-warning-500'
-  return 'bg-success-500'
 }
 </script>
