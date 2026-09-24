@@ -206,7 +206,6 @@
           </div>
         </div>
       </nav>
-      <SidebarWidget v-if="isExpanded || isHovered || isMobileOpen" />
     </div>
   </aside>
 </template>
@@ -229,7 +228,6 @@ import {
   UserCircleIcon,
 } from '@/icons'
 import BoxCubeIcon from '@/icons/BoxCubeIcon.vue'
-import SidebarWidget from './SidebarWidget.vue'
 
 const route = useRoute()
 
@@ -263,28 +261,28 @@ const menuGroups: MenuGroup[] = [
       {
         icon: GridIcon,
         name: 'Dashboard',
-        subItems: [{ name: 'Ecommerce', path: '/', pro: false }],
+        subItems: [{ name: 'Principal', path: '/', pro: false }],
       },
       {
         icon: CalenderIcon,
-        name: 'Calendar',
+        name: 'Calendario',
         path: '/calendar',
       },
       {
         icon: UserCircleIcon,
-        name: 'User Profile',
+        name: 'Perfil',
         path: '/profile',
       },
 
       {
-        name: 'Forms',
+        name: 'Formularios',
         icon: ListIcon,
         subItems: [
           { name: 'Form Elements', path: '/form-elements', pro: false },
         ],
       },
       {
-        name: 'Tables',
+        name: 'Tablas',
         icon: TableIcon,
         subItems: [{ name: 'Basic Tables', path: '/basic-tables', pro: false }],
       },
