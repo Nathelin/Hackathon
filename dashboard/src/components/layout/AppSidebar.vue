@@ -261,20 +261,16 @@ const menuGroups: MenuGroup[] = [
       {
         icon: GridIcon,
         name: 'Dashboard',
-        subItems: [{ name: 'Principal', path: '/', pro: false }],
+        subItems: [{ name: 'Principal', path: '/', pro: false },
+                   { name: 'Lecturas recientes', path: '/lecturas', pro: false}
+        ],
       },
       {
         icon: CalenderIcon,
         name: 'Calendario',
         path: '/calendar',
       },
-      {
-        icon: UserCircleIcon,
-        name: 'Perfil',
-        path: '/profile',
-      },
-
-      {
+      /*{
         name: 'Formularios',
         icon: ListIcon,
         subItems: [
@@ -285,28 +281,37 @@ const menuGroups: MenuGroup[] = [
         name: 'Tablas',
         icon: TableIcon,
         subItems: [{ name: 'Basic Tables', path: '/basic-tables', pro: false }],
+      },*/
+      {
+        name: 'Predicciones',
+        icon: TableIcon,
+        subItems: [{ name: 'Basic Tables', path: '/basic-tables', pro: false }],
       },
       {
-        name: 'Pages',
+        name: 'Informes',
         icon: PageIcon,
         subItems: [
-          { name: 'Blank Page', path: '/blank', pro: false },
-          { name: '404 Page', path: '/error-404', pro: false },
+          { name: 'Estado de los sensores', path: '/blank', pro: false },
         ],
+      },
+      {
+        icon: UserCircleIcon,
+        name: 'Perfil',
+        path: '/profile',
       },
     ],
   },
   {
-    title: 'Others',
+    title: 'Otros',
     items: [
       {
         icon: PieChartIcon,
-        name: 'Charts',
+        name: 'Mi plan',
         subItems: [
           { name: 'Line Chart', path: '/line-chart', pro: false },
           { name: 'Bar Chart', path: '/bar-chart', pro: false },
         ],
-      },
+      }/*
       {
         icon: BoxCubeIcon,
         name: 'Ui Elements',
@@ -326,7 +331,7 @@ const menuGroups: MenuGroup[] = [
           { name: 'Signin', path: '/signin', pro: false },
           { name: 'Signup', path: '/signup', pro: false },
         ],
-      },
+      },*/
     ],
   },
 ]

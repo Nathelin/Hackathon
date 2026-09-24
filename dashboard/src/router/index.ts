@@ -15,6 +15,14 @@ const router = createRouter({
       },
     },
     {
+      path: '/lecturas',
+      name: 'Lecturas',
+      component: () => import('../views/LecturasRecientes.vue'),
+      meta: {
+        title: 'Dashboard lecturas',
+      },
+    },
+    {
       path: '/calendar',
       name: 'Calendar',
       component: () => import('../views/Others/Calendar.vue'),
@@ -146,6 +154,6 @@ const router = createRouter({
 export default router
 
 router.beforeEach((to, from, next) => {
-  document.title = `Vue.js ${to.meta.title} | TailAdmin - Vue.js Tailwind CSS Dashboard Template`
+  document.title = `NOMBRE APLICACION [REDACTED]`
   next()
 })
