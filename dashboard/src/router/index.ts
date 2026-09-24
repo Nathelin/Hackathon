@@ -31,6 +31,14 @@ const router = createRouter({
       },
     },
     {
+      path: '/sensores',
+      name: 'Sensores',
+      component: () => import('../views/Sensores.vue'),
+      meta: {
+        title: 'Sensores',
+      },
+    },
+    {
       path: '/profile',
       name: 'Profile',
       component: () => import('../views/Others/UserProfile.vue'),

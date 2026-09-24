@@ -266,6 +266,11 @@ const menuGroups: MenuGroup[] = [
         ],
       },
       {
+        icon: ListIcon,
+        name: 'Sensores',
+        path: '/sensores',
+      },
+      {
         icon: CalenderIcon,
         name: 'Calendario',
         path: '/calendar',
