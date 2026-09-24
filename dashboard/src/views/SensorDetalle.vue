@@ -287,6 +287,7 @@ import {
   revisionVencida,
   sectorPorId,
   sensorPorId,
+  tanquePorId,
   tipoSensor,
 } from '@/data/mockSensores'
 
@@ -334,10 +335,19 @@ const ubicacion = computed(() => {
   if (!actual) return []
   const sector = sectorPorId(actual.sectorId)
   const plantacion = plantacionPorId(actual.plantacionId)
+  const tanque = actual.tanqueId ? tanquePorId(actual.tanqueId) : undefined
+  const filasTanque = tanque
+    ? [
+        {
+          etiqueta: 'Tanque',
+          valor: `${tanque.nombre} · ${tanque.cama} · ${tanque.capacidadLitros.toLocaleString('es-AR')} L`,
+        },
+      ]
+    : []
   return [
-    { etiqueta: 'Invernadero', valor: sector?.invernadero ?? '—' },
-    { etiqueta: 'Sector', valor: sector?.nombre ?? '—' },
-    { etiqueta: 'Superficie', valor: sector?.superficie ?? '—' },
+    { etiqueta: 'Invernadero', valor: sector?.invernadero || '—' },
+    { etiqueta: 'Sector', valor: sector?.nombre || '—' },
+    { etiqueta: 'Superficie', valor: sector?.superficie || '—' },
     {
       etiqueta: 'Plantación',
       valor: plantacion ? `${plantacion.cultivo} · var. ${plantacion.variedad}` : '—',
@@ -348,6 +358,7 @@ const ubicacion = computed(() => {
         ? `${formatoFecha(plantacion.fechaSiembra)} · ${diasDesde(plantacion.fechaSiembra)} días de ciclo`
         : '—',
     },
+    ...filasTanque,
     { etiqueta: 'Ubicación exacta', valor: actual.ubicacionDetalle },
   ]
 })

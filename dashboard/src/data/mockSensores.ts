@@ -34,6 +34,17 @@ export interface RangoNormal {
   max: number
 }
 
+export interface Tanque {
+  id: string
+  nombre: string
+  sectorId: string
+  cama: string
+  capacidadLitros: number
+  sensorNivelId: string
+  sensorPhId: string
+  sensorEcId: string
+}
+
 export interface Sensor {
   id: string
   codigo: string
@@ -42,6 +53,7 @@ export interface Sensor {
   sectorId: string
   plantacionId: string
   ubicacionDetalle: string
+  tanqueId?: string
   estado: SensorEstado
   ultimaRevision: string
   tecnicoRevision: string
@@ -66,7 +78,7 @@ export const tipoSensor: Record<SensorTipo, { label: string; unidad: string }> =
   humedad_aire: { label: 'Humedad ambiental', unidad: '%' },
   humedad_sustrato: { label: 'Humedad de sustrato', unidad: '%' },
   luz_par: { label: 'Luz PAR', unidad: 'µmol/m²·s' },
-  nivel_tanque: { label: 'Nivel de tanque', unidad: '%' },
+  nivel_tanque: { label: 'Nivel de agua', unidad: '%' },
 }
 
 export const estadoSensor: Record<
@@ -179,6 +191,39 @@ export const plantaciones: Plantacion[] = [
     variedad: 'Cocktail',
     fechaSiembra: '2026-09-01',
     sectorId: 'sec-d',
+  },
+]
+
+export const tanques: Tanque[] = [
+  {
+    id: 'tq-norte',
+    nombre: 'Tanque Norte',
+    sectorId: 'sec-c',
+    cama: 'Bancada 1',
+    capacidadLitros: 1000,
+    sensorNivelId: 'sn-009',
+    sensorPhId: 'sn-007',
+    sensorEcId: 'sn-014',
+  },
+  {
+    id: 'tq-sur',
+    nombre: 'Tanque Sur',
+    sectorId: 'sec-c',
+    cama: 'Bancada 2',
+    capacidadLitros: 800,
+    sensorNivelId: 'sn-016',
+    sensorPhId: 'sn-015',
+    sensorEcId: 'sn-008',
+  },
+  {
+    id: 'tq-respaldo',
+    nombre: 'Tanque de respaldo',
+    sectorId: 'sec-c',
+    cama: 'Bancada 2',
+    capacidadLitros: 500,
+    sensorNivelId: 'sn-019',
+    sensorPhId: 'sn-017',
+    sensorEcId: 'sn-018',
   },
 ]
 
@@ -363,11 +408,12 @@ export const sensores: Sensor[] = [
   {
     id: 'sn-007',
     codigo: 'SNS-007',
-    nombre: 'Sonda de pH de bancada',
+    nombre: 'Sonda de pH – Tanque Norte',
     tipo: 'ph',
     sectorId: 'sec-c',
     plantacionId: 'pla-3',
-    ubicacionDetalle: 'Bancada 1, extremo norte',
+    ubicacionDetalle: 'Tanque Norte · Bancada 1',
+    tanqueId: 'tq-norte',
     estado: 'operativo',
     ultimaRevision: '2026-09-10',
     tecnicoRevision: 'M. Fernández',
@@ -387,11 +433,12 @@ export const sensores: Sensor[] = [
   {
     id: 'sn-008',
     codigo: 'SNS-008',
-    nombre: 'Sensor de conductividad',
+    nombre: 'Sensor de conductividad – Tanque Sur',
     tipo: 'ec',
     sectorId: 'sec-c',
     plantacionId: 'pla-3',
-    ubicacionDetalle: 'Bancada 2, extremo sur',
+    ubicacionDetalle: 'Tanque Sur · Bancada 2',
+    tanqueId: 'tq-sur',
     estado: 'operativo',
     ultimaRevision: '2026-09-10',
     tecnicoRevision: 'M. Fernández',
@@ -411,11 +458,12 @@ export const sensores: Sensor[] = [
   {
     id: 'sn-009',
     codigo: 'SNS-009',
-    nombre: 'Sensor de nivel de tanque',
+    nombre: 'Sensor de nivel – Tanque Norte',
     tipo: 'nivel_tanque',
     sectorId: 'sec-c',
     plantacionId: 'pla-3',
-    ubicacionDetalle: 'Depósito Norte',
+    ubicacionDetalle: 'Tanque Norte · Bancada 1',
+    tanqueId: 'tq-norte',
     estado: 'revision',
     ultimaRevision: '2026-06-01',
     tecnicoRevision: 'L. Ortiz',
@@ -544,6 +592,168 @@ export const sensores: Sensor[] = [
       { fecha: '2026-05-11', tecnico: 'A. Ríos', detalle: 'Instalación en altura de dosel' },
     ],
   },
+  {
+    id: 'sn-014',
+    codigo: 'SNS-014',
+    nombre: 'Sensor de conductividad – Tanque Norte',
+    tipo: 'ec',
+    sectorId: 'sec-c',
+    plantacionId: 'pla-3',
+    ubicacionDetalle: 'Tanque Norte · Bancada 1',
+    tanqueId: 'tq-norte',
+    estado: 'operativo',
+    ultimaRevision: '2026-09-10',
+    tecnicoRevision: 'M. Fernández',
+    proximaRevision: '2026-12-10',
+    instalado: '2026-05-11',
+    firmware: 'v2.4.1',
+    bateria: 76,
+    senal: 85,
+    ultimaLectura: { fecha: '2026-09-24T10:41', valor: 1.9 },
+    rangoNormal: { min: 1.4, max: 2.6 },
+    ...crearSeries(141, 1.9, 0.4, 1.9),
+    revisiones: [
+      { fecha: '2026-09-10', tecnico: 'M. Fernández', detalle: 'Verificación con solución patrón' },
+      {
+        fecha: '2026-05-11',
+        tecnico: 'A. Ríos',
+        detalle: 'Instalación en línea del tanque de nutrientes',
+      },
+    ],
+  },
+  {
+    id: 'sn-015',
+    codigo: 'SNS-015',
+    nombre: 'Sonda de pH – Tanque Sur',
+    tipo: 'ph',
+    sectorId: 'sec-c',
+    plantacionId: 'pla-3',
+    ubicacionDetalle: 'Tanque Sur · Bancada 2',
+    tanqueId: 'tq-sur',
+    estado: 'operativo',
+    ultimaRevision: '2026-09-10',
+    tecnicoRevision: 'M. Fernández',
+    proximaRevision: '2026-12-10',
+    instalado: '2026-05-11',
+    firmware: 'v2.4.1',
+    bateria: 69,
+    senal: 80,
+    ultimaLectura: { fecha: '2026-09-24T10:43', valor: 5.7 },
+    rangoNormal: { min: 5.5, max: 6.5 },
+    ...crearSeries(149, 5.8, 0.5, 5.7),
+    revisiones: [
+      {
+        fecha: '2026-09-10',
+        tecnico: 'M. Fernández',
+        detalle: 'Calibración con soluciones pH 4.0 y 7.0',
+      },
+      { fecha: '2026-05-11', tecnico: 'A. Ríos', detalle: 'Instalación y alta en la red LoRaWAN' },
+    ],
+  },
+  {
+    id: 'sn-016',
+    codigo: 'SNS-016',
+    nombre: 'Sensor de nivel – Tanque Sur',
+    tipo: 'nivel_tanque',
+    sectorId: 'sec-c',
+    plantacionId: 'pla-3',
+    ubicacionDetalle: 'Tanque Sur · Bancada 2',
+    tanqueId: 'tq-sur',
+    estado: 'operativo',
+    ultimaRevision: '2026-09-10',
+    tecnicoRevision: 'L. Ortiz',
+    proximaRevision: '2026-12-10',
+    instalado: '2026-05-11',
+    firmware: 'v2.4.1',
+    bateria: 66,
+    senal: 78,
+    ultimaLectura: { fecha: '2026-09-24T10:45', valor: 48 },
+    rangoNormal: { min: 20, max: 100 },
+    ...crearSeries(151, 55, 25, 48),
+    revisiones: [
+      {
+        fecha: '2026-09-10',
+        tecnico: 'L. Ortiz',
+        detalle: 'Purga de conducto y prueba de flotador',
+      },
+      { fecha: '2026-05-11', tecnico: 'A. Ríos', detalle: 'Instalación en tanque de nutrientes' },
+    ],
+  },
+  {
+    id: 'sn-017',
+    codigo: 'SNS-017',
+    nombre: 'Sonda de pH – Tanque de respaldo',
+    tipo: 'ph',
+    sectorId: 'sec-c',
+    plantacionId: 'pla-3',
+    ubicacionDetalle: 'Tanque de respaldo · Bancada 2',
+    tanqueId: 'tq-respaldo',
+    estado: 'operativo',
+    ultimaRevision: '2026-09-08',
+    tecnicoRevision: 'M. Fernández',
+    proximaRevision: '2026-12-08',
+    instalado: '2026-05-11',
+    firmware: 'v2.4.1',
+    bateria: 58,
+    senal: 71,
+    ultimaLectura: { fecha: '2026-09-24T10:42', valor: 6.1 },
+    rangoNormal: { min: 5.5, max: 6.5 },
+    ...crearSeries(157, 6.0, 0.5, 6.1),
+    revisiones: [
+      { fecha: '2026-09-08', tecnico: 'M. Fernández', detalle: 'Calibración de electrodos' },
+      { fecha: '2026-05-11', tecnico: 'A. Ríos', detalle: 'Instalación en tanque de respaldo' },
+    ],
+  },
+  {
+    id: 'sn-018',
+    codigo: 'SNS-018',
+    nombre: 'Sensor de conductividad – Tanque de respaldo',
+    tipo: 'ec',
+    sectorId: 'sec-c',
+    plantacionId: 'pla-3',
+    ubicacionDetalle: 'Tanque de respaldo · Bancada 2',
+    tanqueId: 'tq-respaldo',
+    estado: 'operativo',
+    ultimaRevision: '2026-09-08',
+    tecnicoRevision: 'M. Fernández',
+    proximaRevision: '2026-12-08',
+    instalado: '2026-05-11',
+    firmware: 'v2.4.1',
+    bateria: 55,
+    senal: 70,
+    ultimaLectura: { fecha: '2026-09-24T10:40', valor: 2.3 },
+    rangoNormal: { min: 1.4, max: 2.6 },
+    ...crearSeries(163, 2.2, 0.4, 2.3),
+    revisiones: [
+      { fecha: '2026-09-08', tecnico: 'M. Fernández', detalle: 'Verificación con solución patrón' },
+      { fecha: '2026-05-11', tecnico: 'A. Ríos', detalle: 'Instalación en tanque de respaldo' },
+    ],
+  },
+  {
+    id: 'sn-019',
+    codigo: 'SNS-019',
+    nombre: 'Sensor de nivel – Tanque de respaldo',
+    tipo: 'nivel_tanque',
+    sectorId: 'sec-c',
+    plantacionId: 'pla-3',
+    ubicacionDetalle: 'Tanque de respaldo · Bancada 2',
+    tanqueId: 'tq-respaldo',
+    estado: 'operativo',
+    ultimaRevision: '2026-09-08',
+    tecnicoRevision: 'L. Ortiz',
+    proximaRevision: '2026-12-08',
+    instalado: '2026-05-11',
+    firmware: 'v2.4.1',
+    bateria: 44,
+    senal: 72,
+    ultimaLectura: { fecha: '2026-09-24T10:46', valor: 12 },
+    rangoNormal: { min: 20, max: 100 },
+    ...crearSeries(167, 35, 25, 12),
+    revisiones: [
+      { fecha: '2026-09-08', tecnico: 'L. Ortiz', detalle: 'Purga y recalibración del flotador' },
+      { fecha: '2026-05-11', tecnico: 'A. Ríos', detalle: 'Instalación en tanque de respaldo' },
+    ],
+  },
 ]
 
 export function sectorPorId(id: string): Sector | undefined {
@@ -556,6 +766,28 @@ export function plantacionPorId(id: string): Plantacion | undefined {
 
 export function sensorPorId(id: string): Sensor | undefined {
   return sensores.find((sensor) => sensor.id === id)
+}
+
+export function tanquePorId(id: string): Tanque | undefined {
+  return tanques.find((tanque) => tanque.id === id)
+}
+
+export function tanquesDeInvernadero(invernadero: string): Tanque[] {
+  return tanques.filter((tanque) => sectorPorId(tanque.sectorId)?.invernadero === invernadero)
+}
+
+export interface SensoresDelTanque {
+  nivel: Sensor
+  ph: Sensor
+  ec: Sensor
+}
+
+export function sensoresDelTanque(tanque: Tanque): SensoresDelTanque | undefined {
+  const nivel = sensorPorId(tanque.sensorNivelId)
+  const ph = sensorPorId(tanque.sensorPhId)
+  const ec = sensorPorId(tanque.sensorEcId)
+  if (!nivel || !ph || !ec) return undefined
+  return { nivel, ph, ec }
 }
 
 export function enAlerta(sensor: Sensor): boolean {
