@@ -8,10 +8,10 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'Ecommerce',
-      component: () => import('../views/Ecommerce.vue'),
+      name: 'Principal',
+      component: () => import('../views/DashboardPrincipal.vue'),
       meta: {
-        title: 'eCommerce Dashboard',
+        title: 'Dashboard principal',
       },
     },
     {
