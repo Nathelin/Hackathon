@@ -15,11 +15,11 @@ const router = createRouter({
       },
     },
     {
-      path: '/lecturas',
-      name: 'Lecturas',
-      component: () => import('../views/LecturasRecientes.vue'),
+      path: '/invernadero2',
+      name: 'Invernadero2',
+      component: () => import('../views/Invernadero2.vue'),
       meta: {
-        title: 'Dashboard lecturas',
+        title: 'Dashboard invernadero2',
       },
     },
     {

@@ -261,8 +261,8 @@ const menuGroups: MenuGroup[] = [
       {
         icon: GridIcon,
         name: 'Dashboard',
-        subItems: [{ name: 'Principal', path: '/', pro: false },
-                   { name: 'Lecturas recientes', path: '/lecturas', pro: false}
+        subItems: [{ name: 'Invernadero 1', path: '/', pro: false },
+                   { name: 'Invernadero 2', path: '/invernadero2', pro: false}
         ],
       },
       {
