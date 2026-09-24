@@ -28,7 +28,7 @@ git --version
 2. Entra en la carpeta del proyecto:
 
 	```bash
-	cd grupo3
+	cd dashboard
 	```
 
 3. Instala las dependencias:
