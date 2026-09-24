@@ -1,0 +1,513 @@
+export type SensorEstado = 'operativo' | 'revision' | 'sin_conexion' | 'fuera_servicio'
+
+export type SensorTipo =
+  'ph' | 'ec' | 'temperatura' | 'humedad_aire' | 'humedad_sustrato' | 'luz_par' | 'nivel_tanque'
+
+export interface Sector {
+  id: string
+  nombre: string
+  invernadero: string
+  superficie: string
+}
+
+export interface Plantacion {
+  id: string
+  cultivo: string
+  variedad: string
+  fechaSiembra: string
+  sectorId: string
+}
+
+export interface Revision {
+  fecha: string
+  tecnico: string
+  detalle: string
+}
+
+export interface Lectura {
+  fecha: string
+  valor: number
+}
+
+export interface RangoNormal {
+  min: number
+  max: number
+}
+
+export interface Sensor {
+  id: string
+  codigo: string
+  nombre: string
+  tipo: SensorTipo
+  sectorId: string
+  plantacionId: string
+  ubicacionDetalle: string
+  estado: SensorEstado
+  ultimaRevision: string
+  tecnicoRevision: string
+  proximaRevision: string
+  instalado: string
+  firmware: string
+  bateria: number
+  senal: number
+  ultimaLectura: Lectura
+  rangoNormal: RangoNormal
+  serie24h: number[]
+  serie7d: number[]
+  revisiones: Revision[]
+}
+
+export const hoy = '2026-09-24'
+
+export const tipoSensor: Record<SensorTipo, { label: string; unidad: string }> = {
+  ph: { label: 'pH', unidad: 'pH' },
+  ec: { label: 'Conductividad (EC)', unidad: 'mS/cm' },
+  temperatura: { label: 'Temperatura', unidad: '°C' },
+  humedad_aire: { label: 'Humedad ambiental', unidad: '%' },
+  humedad_sustrato: { label: 'Humedad de sustrato', unidad: '%' },
+  luz_par: { label: 'Luz PAR', unidad: 'µmol/m²·s' },
+  nivel_tanque: { label: 'Nivel de tanque', unidad: '%' },
+}
+
+export const estadoSensor: Record<
+  SensorEstado,
+  { label: string; color: 'success' | 'warning' | 'error' | 'info' }
+> = {
+  operativo: { label: 'Operativo', color: 'success' },
+  revision: { label: 'Requiere revisión', color: 'warning' },
+  sin_conexion: { label: 'Sin conexión', color: 'info' },
+  fuera_servicio: { label: 'Fuera de servicio', color: 'error' },
+}
+
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+
+export const etiquetas24h = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`)
+
+export const etiquetas7d = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+
+export function formatoFecha(iso: string): string {
+  const [anio, mes, dia] = iso.split('-')
+  return `${dia} ${MESES[Number(mes) - 1]} ${anio}`
+}
+
+export function formatoFechaHora(iso: string): string {
+  const [fecha, hora] = iso.split('T')
+  return `${formatoFecha(fecha)}, ${hora}`
+}
+
+export function diasDesde(iso: string): number {
+  const desde = Date.parse(`${iso}T00:00:00`)
+  const hasta = Date.parse(`${hoy}T00:00:00`)
+  return Math.round((hasta - desde) / 86400000)
+}
+
+function serie(seed: number, base: number, amplitud: number, puntos: number): number[] {
+  let s = seed
+  const siguiente = () => {
+    s = (s * 1664525 + 1013904223) % 4294967296
+    return s / 4294967296
+  }
+  return Array.from({ length: puntos }, () =>
+    Number((base + (siguiente() - 0.5) * amplitud).toFixed(2)),
+  )
+}
+
+function crearSeries(seed: number, base: number, amplitud: number, valorActual: number) {
+  const serie24h = serie(seed, base, amplitud, 24)
+  const serie7d = serie(seed + 7, base, amplitud * 1.5, 7)
+  serie24h[serie24h.length - 1] = valorActual
+  serie7d[serie7d.length - 1] = valorActual
+  return { serie24h, serie7d }
+}
+
+export const sectores: Sector[] = [
+  {
+    id: 'sec-a',
+    nombre: 'Sector A – Bancadas Norte',
+    invernadero: 'Invernadero 1',
+    superficie: '420 m²',
+  },
+  {
+    id: 'sec-b',
+    nombre: 'Sector B – Bancadas Sur',
+    invernadero: 'Invernadero 1',
+    superficie: '380 m²',
+  },
+  {
+    id: 'sec-c',
+    nombre: 'Sector C – Mesa corrida',
+    invernadero: 'Invernadero 2',
+    superficie: '260 m²',
+  },
+  {
+    id: 'sec-d',
+    nombre: 'Banco de aclimatación',
+    invernadero: 'Vivero',
+    superficie: '150 m²',
+  },
+]
+
+export const plantaciones: Plantacion[] = [
+  {
+    id: 'pla-1',
+    cultivo: 'Lechuga romana',
+    variedad: 'Saladbowl',
+    fechaSiembra: '2026-08-12',
+    sectorId: 'sec-a',
+  },
+  {
+    id: 'pla-2',
+    cultivo: 'Albahaca genovesa',
+    variedad: 'Genovese',
+    fechaSiembra: '2026-08-28',
+    sectorId: 'sec-b',
+  },
+  {
+    id: 'pla-3',
+    cultivo: 'Tomillo limón',
+    variedad: 'Limón',
+    fechaSiembra: '2026-07-15',
+    sectorId: 'sec-c',
+  },
+  {
+    id: 'pla-4',
+    cultivo: 'Plantines de tomate',
+    variedad: 'Cocktail',
+    fechaSiembra: '2026-09-01',
+    sectorId: 'sec-d',
+  },
+]
+
+export const sensores: Sensor[] = [
+  {
+    id: 'sn-001',
+    codigo: 'SNS-001',
+    nombre: 'Sonda de pH principal',
+    tipo: 'ph',
+    sectorId: 'sec-a',
+    plantacionId: 'pla-1',
+    ubicacionDetalle: 'Mesa 1, fila A',
+    estado: 'operativo',
+    ultimaRevision: '2026-09-05',
+    tecnicoRevision: 'M. Fernández',
+    proximaRevision: '2026-12-05',
+    instalado: '2026-03-18',
+    firmware: 'v2.4.1',
+    bateria: 92,
+    senal: 88,
+    ultimaLectura: { fecha: '2026-09-24T10:42', valor: 5.9 },
+    rangoNormal: { min: 5.5, max: 6.5 },
+    ...crearSeries(11, 5.9, 0.5, 5.9),
+    revisiones: [
+      {
+        fecha: '2026-09-05',
+        tecnico: 'M. Fernández',
+        detalle: 'Calibración con soluciones pH 4.0 y 7.0',
+      },
+      {
+        fecha: '2026-06-05',
+        tecnico: 'M. Fernández',
+        detalle: 'Limpieza de electrodos y revisión de junta',
+      },
+      { fecha: '2026-03-18', tecnico: 'A. Ríos', detalle: 'Instalación y verificación inicial' },
+    ],
+  },
+  {
+    id: 'sn-002',
+    codigo: 'SNS-002',
+    nombre: 'Sensor de conductividad',
+    tipo: 'ec',
+    sectorId: 'sec-a',
+    plantacionId: 'pla-1',
+    ubicacionDetalle: 'Mesa 2, fila B',
+    estado: 'operativo',
+    ultimaRevision: '2026-09-05',
+    tecnicoRevision: 'M. Fernández',
+    proximaRevision: '2026-12-05',
+    instalado: '2026-03-18',
+    firmware: 'v2.4.1',
+    bateria: 78,
+    senal: 84,
+    ultimaLectura: { fecha: '2026-09-24T10:41', valor: 1.6 },
+    rangoNormal: { min: 1.2, max: 2.4 },
+    ...crearSeries(23, 1.6, 0.5, 1.6),
+    revisiones: [
+      {
+        fecha: '2026-09-05',
+        tecnico: 'M. Fernández',
+        detalle: 'Verificación con solución patrón 1.413 mS/cm',
+      },
+      {
+        fecha: '2026-05-20',
+        tecnico: 'L. Ortiz',
+        detalle: 'Limpieza de sonda y sellado del cable',
+      },
+    ],
+  },
+  {
+    id: 'sn-003',
+    codigo: 'SNS-003',
+    nombre: 'Sonda de humedad de sustrato',
+    tipo: 'humedad_sustrato',
+    sectorId: 'sec-a',
+    plantacionId: 'pla-1',
+    ubicacionDetalle: 'Mesa 3, fila A',
+    estado: 'revision',
+    ultimaRevision: '2026-06-18',
+    tecnicoRevision: 'L. Ortiz',
+    proximaRevision: '2026-09-18',
+    instalado: '2026-03-18',
+    firmware: 'v2.3.8',
+    bateria: 41,
+    senal: 76,
+    ultimaLectura: { fecha: '2026-09-24T10:38', valor: 52 },
+    rangoNormal: { min: 40, max: 70 },
+    ...crearSeries(37, 52, 14, 52),
+    revisiones: [
+      {
+        fecha: '2026-06-18',
+        tecnico: 'L. Ortiz',
+        detalle: 'Reemplazo de sonda por desgaste del elemento',
+      },
+      { fecha: '2026-03-18', tecnico: 'A. Ríos', detalle: 'Instalación en línea de riego' },
+    ],
+  },
+  {
+    id: 'sn-004',
+    codigo: 'SNS-004',
+    nombre: 'Termopar de ambiente',
+    tipo: 'temperatura',
+    sectorId: 'sec-b',
+    plantacionId: 'pla-2',
+    ubicacionDetalle: 'Mesa 1, fila C',
+    estado: 'operativo',
+    ultimaRevision: '2026-08-30',
+    tecnicoRevision: 'A. Ríos',
+    proximaRevision: '2026-11-30',
+    instalado: '2026-04-02',
+    firmware: 'v2.4.1',
+    bateria: 87,
+    senal: 91,
+    ultimaLectura: { fecha: '2026-09-24T10:44', valor: 23.4 },
+    rangoNormal: { min: 18, max: 26 },
+    ...crearSeries(41, 23, 3.5, 23.4),
+    revisiones: [
+      {
+        fecha: '2026-08-30',
+        tecnico: 'A. Ríos',
+        detalle: 'Verificación con termómetro de referencia',
+      },
+      {
+        fecha: '2026-05-30',
+        tecnico: 'A. Ríos',
+        detalle: 'Ajuste de calibración por desviación de 0.4 °C',
+      },
+    ],
+  },
+  {
+    id: 'sn-005',
+    codigo: 'SNS-005',
+    nombre: 'Higrómetro ambiental',
+    tipo: 'humedad_aire',
+    sectorId: 'sec-b',
+    plantacionId: 'pla-2',
+    ubicacionDetalle: 'Mesa 2, fila A',
+    estado: 'operativo',
+    ultimaRevision: '2026-08-30',
+    tecnicoRevision: 'A. Ríos',
+    proximaRevision: '2026-11-30',
+    instalado: '2026-04-02',
+    firmware: 'v2.4.0',
+    bateria: 65,
+    senal: 79,
+    ultimaLectura: { fecha: '2026-09-24T10:40', valor: 68 },
+    rangoNormal: { min: 55, max: 75 },
+    ...crearSeries(53, 68, 10, 68),
+    revisiones: [
+      { fecha: '2026-08-30', tecnico: 'A. Ríos', detalle: 'Limpieza del filtro de aspiración' },
+      {
+        fecha: '2026-04-02',
+        tecnico: 'A. Ríos',
+        detalle: 'Instalación y emparejamiento con gateway',
+      },
+    ],
+  },
+  {
+    id: 'sn-006',
+    codigo: 'SNS-006',
+    nombre: 'Sensor PAR de dosel',
+    tipo: 'luz_par',
+    sectorId: 'sec-b',
+    plantacionId: 'pla-2',
+    ubicacionDetalle: 'Dosel, eje central',
+    estado: 'sin_conexion',
+    ultimaRevision: '2026-07-22',
+    tecnicoRevision: 'L. Ortiz',
+    proximaRevision: '2026-10-22',
+    instalado: '2026-04-02',
+    firmware: 'v2.4.0',
+    bateria: 12,
+    senal: 0,
+    ultimaLectura: { fecha: '2026-09-23T18:05', valor: 310 },
+    rangoNormal: { min: 200, max: 400 },
+    ...crearSeries(67, 310, 90, 310),
+    revisiones: [
+      { fecha: '2026-07-22', tecnico: 'L. Ortiz', detalle: 'Actualización de firmware a v2.4.0' },
+      { fecha: '2026-04-02', tecnico: 'A. Ríos', detalle: 'Montaje en dosel y ajuste de altura' },
+    ],
+  },
+  {
+    id: 'sn-007',
+    codigo: 'SNS-007',
+    nombre: 'Sonda de pH de bancada',
+    tipo: 'ph',
+    sectorId: 'sec-c',
+    plantacionId: 'pla-3',
+    ubicacionDetalle: 'Bancada 1, extremo norte',
+    estado: 'operativo',
+    ultimaRevision: '2026-09-10',
+    tecnicoRevision: 'M. Fernández',
+    proximaRevision: '2026-12-10',
+    instalado: '2026-05-11',
+    firmware: 'v2.4.1',
+    bateria: 73,
+    senal: 82,
+    ultimaLectura: { fecha: '2026-09-24T10:43', valor: 6.9 },
+    rangoNormal: { min: 5.5, max: 6.5 },
+    ...crearSeries(71, 6.4, 0.6, 6.9),
+    revisiones: [
+      { fecha: '2026-09-10', tecnico: 'M. Fernández', detalle: 'Calibración de electrodos' },
+      { fecha: '2026-06-10', tecnico: 'M. Fernández', detalle: 'Reemplazo de junta de referencia' },
+    ],
+  },
+  {
+    id: 'sn-008',
+    codigo: 'SNS-008',
+    nombre: 'Sensor de conductividad',
+    tipo: 'ec',
+    sectorId: 'sec-c',
+    plantacionId: 'pla-3',
+    ubicacionDetalle: 'Bancada 2, extremo sur',
+    estado: 'operativo',
+    ultimaRevision: '2026-09-10',
+    tecnicoRevision: 'M. Fernández',
+    proximaRevision: '2026-12-10',
+    instalado: '2026-05-11',
+    firmware: 'v2.4.1',
+    bateria: 58,
+    senal: 74,
+    ultimaLectura: { fecha: '2026-09-24T10:39', valor: 2.1 },
+    rangoNormal: { min: 1.4, max: 2.6 },
+    ...crearSeries(83, 2.1, 0.4, 2.1),
+    revisiones: [
+      { fecha: '2026-09-10', tecnico: 'M. Fernández', detalle: 'Verificación con solución patrón' },
+      { fecha: '2026-05-11', tecnico: 'A. Ríos', detalle: 'Instalación y alta en la red LoRaWAN' },
+    ],
+  },
+  {
+    id: 'sn-009',
+    codigo: 'SNS-009',
+    nombre: 'Sensor de nivel de tanque',
+    tipo: 'nivel_tanque',
+    sectorId: 'sec-c',
+    plantacionId: 'pla-3',
+    ubicacionDetalle: 'Depósito Norte',
+    estado: 'revision',
+    ultimaRevision: '2026-06-01',
+    tecnicoRevision: 'L. Ortiz',
+    proximaRevision: '2026-09-01',
+    instalado: '2026-02-20',
+    firmware: 'v2.3.8',
+    bateria: 18,
+    senal: 69,
+    ultimaLectura: { fecha: '2026-09-24T10:45', valor: 17 },
+    rangoNormal: { min: 20, max: 100 },
+    ...crearSeries(97, 45, 30, 17),
+    revisiones: [
+      {
+        fecha: '2026-06-01',
+        tecnico: 'L. Ortiz',
+        detalle: 'Sustitución del flotador y purga de conducto',
+      },
+      { fecha: '2026-02-20', tecnico: 'A. Ríos', detalle: 'Instalación en depósito de nutrientes' },
+    ],
+  },
+  {
+    id: 'sn-010',
+    codigo: 'SNS-010',
+    nombre: 'Termopar de aclimatación',
+    tipo: 'temperatura',
+    sectorId: 'sec-d',
+    plantacionId: 'pla-4',
+    ubicacionDetalle: 'Módulo 1, estante alto',
+    estado: 'operativo',
+    ultimaRevision: '2026-09-12',
+    tecnicoRevision: 'A. Ríos',
+    proximaRevision: '2026-12-12',
+    instalado: '2026-08-01',
+    firmware: 'v2.4.1',
+    bateria: 95,
+    senal: 93,
+    ultimaLectura: { fecha: '2026-09-24T10:42', valor: 24.8 },
+    rangoNormal: { min: 20, max: 28 },
+    ...crearSeries(101, 24, 3, 24.8),
+    revisiones: [
+      { fecha: '2026-09-12', tecnico: 'A. Ríos', detalle: 'Calibración de rutina' },
+      { fecha: '2026-08-01', tecnico: 'A. Ríos', detalle: 'Instalación en módulo de aclimatación' },
+    ],
+  },
+  {
+    id: 'sn-011',
+    codigo: 'SNS-011',
+    nombre: 'Higrómetro de aclimatación',
+    tipo: 'humedad_aire',
+    sectorId: 'sec-d',
+    plantacionId: 'pla-4',
+    ubicacionDetalle: 'Módulo 2, estante bajo',
+    estado: 'fuera_servicio',
+    ultimaRevision: '2026-08-20',
+    tecnicoRevision: 'L. Ortiz',
+    proximaRevision: '2026-09-20',
+    instalado: '2026-08-01',
+    firmware: 'v2.4.0',
+    bateria: 0,
+    senal: 0,
+    ultimaLectura: { fecha: '2026-09-21T07:15', valor: 61 },
+    rangoNormal: { min: 55, max: 75 },
+    ...crearSeries(113, 61, 8, 61),
+    revisiones: [
+      {
+        fecha: '2026-08-20',
+        tecnico: 'L. Ortiz',
+        detalle: 'Diagnóstico: fallo de placa, unidad en reposición',
+      },
+      { fecha: '2026-08-01', tecnico: 'A. Ríos', detalle: 'Instalación en módulo de aclimatación' },
+    ],
+  },
+]
+
+export function sectorPorId(id: string): Sector | undefined {
+  return sectores.find((sector) => sector.id === id)
+}
+
+export function plantacionPorId(id: string): Plantacion | undefined {
+  return plantaciones.find((plantacion) => plantacion.id === id)
+}
+
+export function sensorPorId(id: string): Sensor | undefined {
+  return sensores.find((sensor) => sensor.id === id)
+}
+
+export function enAlerta(sensor: Sensor): boolean {
+  if (sensor.estado === 'sin_conexion' || sensor.estado === 'fuera_servicio') return false
+  const { valor } = sensor.ultimaLectura
+  return valor < sensor.rangoNormal.min || valor > sensor.rangoNormal.max
+}
+
+export function revisionVencida(sensor: Sensor): boolean {
+  return sensor.proximaRevision < hoy
+}
+
+export function bateriaBaja(sensor: Sensor): boolean {
+  return sensor.bateria <= 20
+}

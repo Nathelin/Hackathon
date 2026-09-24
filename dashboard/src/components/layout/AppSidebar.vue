@@ -312,10 +312,7 @@ const menuGroups: MenuGroup[] = [
       {
         icon: PieChartIcon,
         name: 'Mi plan',
-        subItems: [
-          { name: 'Line Chart', path: '/line-chart', pro: false },
-          { name: 'Bar Chart', path: '/bar-chart', pro: false },
-        ],
+        path: '/plan'
       }/*
       {
         icon: BoxCubeIcon,

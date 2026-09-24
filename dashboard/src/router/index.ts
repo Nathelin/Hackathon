@@ -39,11 +39,27 @@ const router = createRouter({
       },
     },
     {
+      path: '/sensores/:id',
+      name: 'SensorDetalle',
+      component: () => import('../views/SensorDetalle.vue'),
+      meta: {
+        title: 'Detalle del sensor',
+      },
+    },
+    {
       path: '/profile',
       name: 'Profile',
       component: () => import('../views/Others/UserProfile.vue'),
       meta: {
         title: 'Profile',
+      },
+    },
+    {
+      path: '/plan',
+      name: 'PlanPago',
+      component: () => import('../views/Others/Plan.vue'),
+      meta: {
+        title: 'Plan',
       },
     },
     {
