@@ -186,6 +186,6 @@ const router = createRouter({
 export default router
 
 router.beforeEach((to, from, next) => {
-  document.title = `NOMBRE APLICACION [REDACTED]`
+  document.title = `SisMoHidro`
   next()
 })
