@@ -1,0 +1,16 @@
+[Unit]
+Description=HydroGuard - API REST y lector ESP32
+After=network.target
+
+[Service]
+Type=simple
+# Reemplazar /RUTA/ por la ruta absoluta al proyecto Hackathon.
+WorkingDirectory=/RUTA/telemetry
+ExecStart=/bin/bash /RUTA/telemetry/run_local.sh
+Restart=on-failure
+RestartSec=2
+KillMode=control-group
+TimeoutStopSec=10
+
+[Install]
+WantedBy=default.target

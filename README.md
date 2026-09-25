@@ -2,6 +2,23 @@
 
 Proyecto web desarrollado con Vue 3, TypeScript y Vite.
 
+## ESP32 y dashboard en vivo (versión local)
+
+La pantalla principal ahora recibe pH, humedad del aire, conductividad y temperatura por API REST, para Invernadero 1 / Tanque 1. Ver [manual de telemetría](telemetry/README.md) para cableado, arranque automático, contrato de API, alertas, pruebas y límites de Vercel.
+
+Los eventos críticos abren avisos destacados en cuanto una lectura entra en nivel crítico. El botón **Consultar al asistente** permite analizar y consultar las lecturas con [textos predeterminados locales](telemetry/ANALISIS_LOCAL.md): no necesita clave, Internet ni una API paga.
+
+Con las dependencias web instaladas:
+
+```bash
+cd dashboard
+npm run build
+cd ../telemetry
+bash run_local.sh
+```
+
+Abrir http://127.0.0.1:8080/. En la PC del prototipo ya está activo `hydroguard-dashboard.service`; no iniciar otra copia manual. Las otras pantallas conservan los ejemplos de diseño y se identifican como demostraciones. La integración no requiere modificar el firmware existente de cuatro canales.
+
 ## Requisitos
 
 - Node.js 20.19 o superior (o Node.js 22.12 o superior).

@@ -6,10 +6,11 @@ const router = createRouter({
     return savedPosition || { left: 0, top: 0 }
   },
   routes: [
+    { path: '/index.html', redirect: '/' },
     {
       path: '/',
       name: 'Invernadero1Inicio',
-      component: () => import('../views/Invernadero1.vue'),
+      component: () => import('../views/LiveDashboard.vue'),
       meta: {
         title: 'Invernadero 1',
       },
@@ -17,7 +18,7 @@ const router = createRouter({
     {
       path: '/invernadero1',
       name: 'Invernadero1',
-      component: () => import('../views/Invernadero1.vue'),
+      component: () => import('../views/LiveDashboard.vue'),
       meta: {
         title: 'Invernadero 1',
       },
@@ -186,6 +187,6 @@ const router = createRouter({
 export default router
 
 router.beforeEach((to, from, next) => {
-  document.title = `NOMBRE APLICACION [REDACTED]`
+  document.title = `HydroGuard · ${to.meta.title || 'Dashboard'}`
   next()
 })
