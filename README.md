@@ -1,15 +1,25 @@
 # Grupo 3
 
-Proyecto web desarrollado con Vue 3, TypeScript y Vite.
+Proyecto desarrollado para el Hackathon de Hidroponía 2026, orientado al monitoreo de distintas condiciones de los tanques en los invernaderos de los productores. El frontend está desarrollado con Vue 3, TypeScript y Vite.
+
+## Tecnologías principales
+
+- Vue 3 con Composition API y `<script setup>`.
+- TypeScript para tipado estático.
+- Vite como servidor de desarrollo y herramienta de compilación.
+- Tailwind CSS 4 para estilos y modo claro/oscuro.
+- Vue Router 4 para la navegación.
+- ApexCharts para gráficos y visualización de lecturas.
+- FullCalendar, Leaflet, Swiper y Flatpickr para calendarios, mapas, carruseles y selectores de fecha.
+- ESLint y Prettier para calidad y formato del código.
 
 ## Requisitos
 
-- Node.js 20.19 o superior (o Node.js 22.12 o superior).
+- Node.js 20.19 o superior, o Node.js 22.12 o superior.
 - npm, incluido con Node.js.
 - Git.
-- Un IDE.
 
-Puedes comprobar las versiones instaladas con:
+Comprueba las versiones instaladas con:
 
 ```bash
 node --version
@@ -17,7 +27,7 @@ npm --version
 git --version
 ```
 
-## Instalación
+## Clonar y ejecutar
 
 1. Clona el repositorio:
 
@@ -25,10 +35,10 @@ git --version
 	git clone <URL>
 	```
 
-2. Entra en la carpeta del proyecto:
+2. Entra en la carpeta de la aplicación:
 
 	```bash
-	cd grupo3
+	cd Hackathon/dashboard
 	```
 
 3. Instala las dependencias:
@@ -37,53 +47,38 @@ git --version
 	npm install
 	```
 
-## Desarrollo
+4. Inicia el servidor de desarrollo:
 
-Inicia el servidor de desarrollo con recarga automática:
+	```bash
+	npm run dev
+	```
 
-```bash
-npm run dev
-```
+Abre la dirección que muestre Vite, normalmente `http://localhost:5173/`.
 
-Vite mostrará en la terminal la dirección local, normalmente `http://localhost:5173/`. Abre esa dirección en el navegador.
-
-Para detener el servidor, pulsa `Ctrl+C` en la terminal.
-
-## Compilación y previsualización
-
-Comprueba que el proyecto compila correctamente y genera la versión de producción en `dist/`:
+## Comandos disponibles
 
 ```bash
-npm run build
+npm run dev         # Inicia el servidor de desarrollo
+npm run build       # Comprueba tipos y genera la versión de producción
+npm run preview     # Previsualiza la compilación de producción
+npm run type-check  # Ejecuta la comprobación de TypeScript
+npm run lint        # Ejecuta ESLint
+npm run format      # Formatea el código de src/
 ```
 
-Para previsualizar localmente esa compilación:
-
-```bash
-npm run preview
-```
+La compilación de producción se genera en `dashboard/dist/`. No es necesario subir `node_modules/` ni `dist/` al repositorio.
 
 ## Estructura principal
 
 ```text
-src/
-├── App.vue          # Componente principal
-├── main.ts          # Punto de entrada de la aplicación
-├── style.css        # Estilos globales
-├── assets/          # Recursos estáticos importados por la aplicación
-└── components/      # Componentes Vue reutilizables
-public/              # Archivos públicos servidos sin transformación
+dashboard/
+├── public/          # Imágenes y recursos públicos
+├── src/
+│   ├── components/  # Componentes reutilizables y layouts
+│   ├── data/        # Datos de sensores y modelos de dominio
+│   ├── router/      # Rutas de la aplicación
+│   ├── views/       # Pantallas del dashboard
+│   └── App.vue      # Componente principal
+├── package.json     # Dependencias y scripts
+└── vite.config.ts   # Configuración de Vite
 ```
-
-## Flujo de trabajo recomendado
-
-1. Ejecuta `npm install` después de clonar el repositorio o cuando cambien las dependencias.
-2. Trabaja con `npm run dev` mientras desarrollas.
-3. Ejecuta `npm run build` antes de entregar cambios para comprobar tipos y compilación.
-4. No subas `node_modules/` ni `dist/` al repositorio; ambos se generan automáticamente.
-
-## Tecnologías
-
-- [Vue 3](https://vuejs.org/)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Vite](https://vite.dev/)
