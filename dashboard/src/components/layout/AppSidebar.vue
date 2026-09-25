@@ -222,11 +222,11 @@ const menuGroups: MenuGroup[] = [
   {
     title: 'Menu',
     items: [
-      {
+      /*{
         icon: HomeIcon,
         name: 'Inicio',
         path: '/',
-      },
+      },*/
       {
         icon: GridIcon,
         name: 'Dashboard',
