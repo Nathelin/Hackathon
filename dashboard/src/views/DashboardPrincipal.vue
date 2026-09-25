@@ -1,7 +1,7 @@
 <template>
   <AdminLayout>
-    <h1 class="font-medium text-4xl pb-5">¡Bienvenido!</h1>
-    <h2 class="font-medium text-2xl pb-5">Resumen de lecturas recientes del Invernadero 1.</h2>
+    <h1 class="font-medium text-4xl pb-5 text-gray-800 dark:text-white/90">¡Bienvenido!</h1>
+    <h2 class="font-medium text-2xl pb-5 dark:text-white/90">Resumen de lecturas recientes del Invernadero 1.</h2>
 
     <div class="space-y-5 pb-6 sm:space-y-6">
       <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
