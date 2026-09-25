@@ -29,7 +29,7 @@
               Inventario de dispositivos
             </h3>
             <p class="mt-1 text-theme-sm text-gray-500 dark:text-gray-400">
-              {{ dispositivosFiltrados.length }} de {{ dispositivos.length }} dispositivos ·
+              {{ dispositivosFiltrados.length }} de {{ dispositivosTanque.length }} dispositivos ·
               {{ totalMediciones }} mediciones en total
             </p>
           </div>
@@ -49,7 +49,7 @@
             <input
               v-model="busqueda"
               type="search"
-              placeholder="Buscar código, nombre o ubicación"
+              placeholder="Buscar código, nombre o tanque"
               class="h-10 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 ps-9 pe-4 text-theme-sm text-gray-800 placeholder:text-gray-400 focus:border-brand-300 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white/90 dark:placeholder:text-gray-500 dark:focus:border-brand-300"
             />
             <svg
@@ -70,12 +70,12 @@
 
           <div class="relative w-full sm:w-56">
             <select
-              v-model="filtroSector"
+              v-model="filtroInvernadero"
               class="h-10 w-full appearance-none rounded-lg border border-gray-200 bg-white py-2.5 ps-4 pe-10 text-theme-sm text-gray-700 shadow-theme-xs focus:border-brand-300 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
             >
-              <option value="">Todos los sectores</option>
-              <option v-for="sector in sectores" :key="sector.id" :value="sector.id">
-                {{ sector.nombre || sector.invernadero }}
+              <option value="">Todos los invernaderos</option>
+              <option v-for="nombre in invernaderosDisponibles" :key="nombre" :value="nombre">
+                {{ nombre }}
               </option>
             </select>
             <ChevronDownIcon
@@ -103,7 +103,7 @@
       <template v-if="grupos.length > 0">
         <section
           v-for="grupo in grupos"
-          :key="grupo.sector.id"
+          :key="grupo.invernadero"
           class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]"
         >
           <div
@@ -112,18 +112,18 @@
             <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
               <div class="flex flex-wrap items-center gap-2">
                 <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">
-                  {{ grupo.sector.nombre || grupo.sector.invernadero }}
+                  {{ grupo.invernadero }}
                 </h3>
                 <span
                   class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-theme-xs font-medium text-gray-700 dark:bg-white/5 dark:text-white/80"
                 >
-                  {{ grupo.dispositivos.length }} dispositivos
+                  {{ grupo.filas.length }} dispositivos
                 </span>
               </div>
 
               <div class="flex flex-wrap items-center gap-1.5">
                 <span
-                  v-for="chip in resumenSector(grupo)"
+                  v-for="chip in resumenGrupo(grupo)"
                   :key="chip.etiqueta"
                   :class="[chipBase, chipClase[chip.tono]]"
                 >
@@ -135,7 +135,7 @@
             <div
               class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-theme-xs text-gray-500 dark:text-gray-400"
             >
-              <span>{{ grupo.sector.invernadero }} · {{ grupo.sector.superficie }}</span>
+              <span>{{ grupo.filas.length }} tanques · {{ grupo.superficie }}</span>
               <span v-for="info in plantacionesTexto(grupo)" :key="info">
                 <span class="text-gray-300 dark:text-gray-600">·</span> {{ info }}
               </span>
@@ -143,7 +143,7 @@
           </div>
 
           <div class="max-w-full overflow-x-auto custom-scrollbar">
-            <table class="min-w-full">
+            <table class="min-w-[900px]">
               <thead>
                 <tr class="border-b border-gray-100 dark:border-gray-800">
                   <th
@@ -160,58 +160,107 @@
 
               <tbody>
                 <tr
-                  v-for="dispositivo in grupo.dispositivos"
-                  :key="dispositivo.id"
+                  v-for="fila in grupo.filas"
+                  :key="fila.dispositivo.id"
                   class="cursor-pointer border-b border-gray-100 transition last:border-0 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-white/[0.02]"
-                  @click="irAlDetalle(dispositivo.id)"
+                  @click="irAlDetalle(fila.dispositivo.id)"
                 >
-                  <td class="py-3 ps-4 pe-4 sm:ps-6">
+                  <td class="py-3 ps-4 pe-4 whitespace-nowrap sm:ps-6">
+                    <p class="text-theme-sm font-medium text-gray-800 dark:text-white/90">
+                      {{ fila.tanque.nombre }}
+                    </p>
+                    <span class="text-theme-xs text-gray-500 dark:text-gray-400">
+                      {{ fila.tanque.cama }} · {{ fila.tanque.capacidadLitros }} L
+                    </span>
+                  </td>
+
+                  <td class="py-3 pe-4">
                     <router-link
-                      :to="{ name: 'SensorDetalle', params: { id: dispositivo.id } }"
+                      :to="{ name: 'SensorDetalle', params: { id: fila.dispositivo.id } }"
                       class="block"
                       @click.stop
                     >
                       <p class="text-theme-sm font-medium text-gray-800 dark:text-white/90">
-                        {{ dispositivo.codigo }}
+                        {{ fila.dispositivo.codigo }}
                         <span class="font-normal text-gray-500 dark:text-gray-400">
-                          · {{ dispositivo.nombre }}
+                          · {{ fila.dispositivo.nombre }}
                         </span>
                       </p>
                       <span class="text-theme-xs text-gray-500 dark:text-gray-400">
-                        {{ etiquetasMediciones(dispositivo) }}
+                        {{ etiquetasMediciones(fila.dispositivo) }}
                       </span>
                     </router-link>
                   </td>
 
                   <td class="py-3 pe-4 whitespace-nowrap">
-                    <p class="text-theme-sm text-gray-500 dark:text-gray-400">
-                      {{ dispositivo.ubicacionDetalle }}
-                    </p>
+                    <template v-if="fila.ph">
+                      <p
+                        :class="[
+                          'text-theme-sm font-semibold',
+                          fila.phAlerta
+                            ? 'text-error-600 dark:text-error-500'
+                            : 'text-gray-800 dark:text-white/90',
+                        ]"
+                      >
+                        {{ fila.ph.ultimaLectura.valor }}
+                      </p>
+                      <span class="text-theme-xs text-gray-500 dark:text-gray-400">
+                        {{ formatoHora(fila.ph.ultimaLectura.fecha)
+                        }}{{ fila.phAlerta ? ' · fuera de rango' : '' }}
+                      </span>
+                    </template>
+                    <span v-else class="text-theme-xs text-gray-400 dark:text-gray-500">—</span>
+                  </td>
+
+                  <td class="py-3 pe-4 whitespace-nowrap">
+                    <template v-if="fila.ec">
+                      <p
+                        :class="[
+                          'text-theme-sm font-semibold',
+                          fila.ecAlerta
+                            ? 'text-error-600 dark:text-error-500'
+                            : 'text-gray-800 dark:text-white/90',
+                        ]"
+                      >
+                        {{ fila.ec.ultimaLectura.valor }}
+                        <span class="text-theme-xs font-normal text-gray-500 dark:text-gray-400">
+                          mS/cm
+                        </span>
+                      </p>
+                      <span class="text-theme-xs text-gray-500 dark:text-gray-400">
+                        {{ formatoHora(fila.ec.ultimaLectura.fecha)
+                        }}{{ fila.ecAlerta ? ' · fuera de rango' : '' }}
+                      </span>
+                    </template>
+                    <span v-else class="text-theme-xs text-gray-400 dark:text-gray-500">—</span>
                   </td>
 
                   <td class="py-3 pe-4 whitespace-nowrap">
                     <p class="text-theme-sm text-gray-800 dark:text-white/90">
-                      {{ formatoFecha(dispositivo.ultimaRevision) }}
+                      {{ formatoFecha(fila.dispositivo.ultimaRevision) }}
                     </p>
                     <span class="text-theme-xs text-gray-500 dark:text-gray-400">
-                      {{ dispositivo.tecnicoRevision }}
+                      {{ fila.dispositivo.tecnicoRevision }}
                     </span>
                     <p
                       :class="[
                         'mt-0.5 text-theme-xs',
-                        revisionVencida(dispositivo)
+                        revisionVencida(fila.dispositivo)
                           ? 'font-medium text-warning-600 dark:text-orange-400'
                           : 'text-gray-500 dark:text-gray-400',
                       ]"
                     >
-                      Próx. {{ formatoFecha(dispositivo.proximaRevision)
-                      }}{{ revisionVencida(dispositivo) ? ' · vencida' : '' }}
+                      Próx. {{ formatoFecha(fila.dispositivo.proximaRevision)
+                      }}{{ revisionVencida(fila.dispositivo) ? ' · vencida' : '' }}
                     </p>
                   </td>
 
                   <td class="py-3 pe-4 sm:pe-6">
                     <div class="flex items-center justify-between gap-3">
-                      <EstadoSensor :estado="dispositivo.estado" :alerta="enAlerta(dispositivo)" />
+                      <EstadoSensor
+                        :estado="fila.dispositivo.estado"
+                        :alerta="enAlerta(fila.dispositivo)"
+                      />
                       <ChevronRightIcon class="h-4 w-4 shrink-0 text-gray-400 rtl:rotate-180" />
                     </div>
                   </td>
@@ -255,53 +304,79 @@ import {
   enAlerta,
   estadoSensor,
   formatoFecha,
-  revisionVencida,
-  sectores,
-  tipoSensor,
+  formatoHora,
+  medicionEnAlerta,
+  medicionPorTipo,
   plantaciones,
+  revisionVencida,
+  sectorPorId,
+  sectores,
+  tanquePorId,
+  tipoSensor,
   type Dispositivo,
+  type Medicion,
+  type Plantacion,
+  type Tanque,
 } from '@/data/mockSensores'
 
 const router = useRouter()
 
 const busqueda = ref('')
-const filtroSector = ref('')
+const filtroInvernadero = ref('')
 const filtroEstado = ref('')
 
-const columnas = ['Dispositivo', 'Ubicación', 'Última revisión', 'Estado']
+const columnas = ['Tanque', 'Dispositivo', 'pH', 'Conductividad (EC)', 'Última revisión', 'Estado']
+
+const dispositivosTanque = computed(() =>
+  dispositivos.filter((dispositivo) => dispositivo.tanqueId !== undefined),
+)
 
 const totalMediciones = computed(() =>
-  dispositivos.reduce((total, dispositivo) => total + dispositivo.mediciones.length, 0),
+  dispositivosTanque.value.reduce((total, dispositivo) => total + dispositivo.mediciones.length, 0),
 )
+
+const invernaderosDisponibles = computed(() => {
+  const conDispositivo = new Set(
+    dispositivosTanque.value.map(
+      (dispositivo) => sectorPorId(dispositivo.sectorId)?.invernadero ?? '',
+    ),
+  )
+  const nombres = sectores.map((sector) => sector.invernadero)
+  return nombres.filter(
+    (nombre, indice) => nombres.indexOf(nombre) === indice && conDispositivo.has(nombre),
+  )
+})
 
 const kpis = computed(() => [
   {
     etiqueta: 'Dispositivos totales',
-    valor: dispositivos.length,
-    nota: `${sectores.length} sectores · ${totalMediciones.value} mediciones`,
+    valor: dispositivosTanque.value.length,
+    nota: `${invernaderosDisponibles.value.length} invernaderos · ${dispositivosTanque.value.length} tanques`,
     tono: 'brand',
   },
   {
     etiqueta: 'Operativos',
-    valor: dispositivos.filter((dispositivo) => dispositivo.estado === 'operativo').length,
+    valor: dispositivosTanque.value.filter((dispositivo) => dispositivo.estado === 'operativo')
+      .length,
     nota: 'con lectura activa',
     tono: 'success',
   },
   {
     etiqueta: 'Requieren revisión',
-    valor: dispositivos.filter((dispositivo) => dispositivo.estado === 'revision').length,
-    nota: 'con mantenimiento vencido',
-    tono: 'warning',
+    valor: 0,
+    nota: 'Mantenimiento al día',
+    tono: 'info',
   },
   {
     etiqueta: 'Sin conexión',
-    valor: dispositivos.filter((dispositivo) => dispositivo.estado === 'sin_conexion').length,
+    valor: dispositivosTanque.value.filter((dispositivo) => dispositivo.estado === 'sin_conexion')
+      .length,
     nota: 'sin reportar señal',
     tono: 'info',
   },
   {
     etiqueta: 'Alertas de umbral',
-    valor: dispositivos.filter((dispositivo) => enAlerta(dispositivo)).length,
+    valor: dispositivosTanque.value.filter((dispositivo) => enAlerta(dispositivo)).length,
     nota: 'alguna medición fuera de rango',
     tono: 'error',
   },
@@ -325,48 +400,91 @@ const chipClase: Record<string, string> = {
 }
 
 const hayFiltros = computed(
-  () => busqueda.value.trim() !== '' || filtroSector.value !== '' || filtroEstado.value !== '',
+  () => busqueda.value.trim() !== '' || filtroInvernadero.value !== '' || filtroEstado.value !== '',
 )
 
 const dispositivosFiltrados = computed(() => {
   const texto = busqueda.value.trim().toLowerCase()
-  return dispositivos.filter((dispositivo) => {
-    const coincideSector = filtroSector.value === '' || dispositivo.sectorId === filtroSector.value
+  return dispositivosTanque.value.filter((dispositivo) => {
+    const sector = sectorPorId(dispositivo.sectorId)
+    const tanque = dispositivo.tanqueId ? tanquePorId(dispositivo.tanqueId) : undefined
+    const coincideInvernadero =
+      filtroInvernadero.value === '' || sector?.invernadero === filtroInvernadero.value
     const coincideEstado = filtroEstado.value === '' || dispositivo.estado === filtroEstado.value
     const textoDispositivo = `${dispositivo.codigo} ${dispositivo.nombre} ${
       dispositivo.ubicacionDetalle
-    } ${dispositivo.mediciones.map((medicion) => tipoSensor[medicion.tipo].label).join(' ')}`
+    } ${tanque ? `${tanque.nombre} ${tanque.cama}` : ''} ${dispositivo.mediciones
+      .map((medicion) => tipoSensor[medicion.tipo].label)
+      .join(' ')}`
     const coincideTexto = texto === '' || textoDispositivo.toLowerCase().includes(texto)
-    return coincideSector && coincideEstado && coincideTexto
+    return coincideInvernadero && coincideEstado && coincideTexto
   })
 })
 
-type GrupoSector = {
-  sector: (typeof sectores)[number]
-  plantaciones: typeof plantaciones
-  dispositivos: Dispositivo[]
+type FilaDispositivo = {
+  dispositivo: Dispositivo
+  tanque: Tanque
+  ph?: Medicion
+  ec?: Medicion
+  phAlerta: boolean
+  ecAlerta: boolean
 }
 
-const grupos = computed<GrupoSector[]>(() =>
-  sectores
-    .map((sector) => ({
-      sector,
-      plantaciones: plantaciones.filter((plantacion) => plantacion.sectorId === sector.id),
-      dispositivos: dispositivosFiltrados.value.filter(
-        (dispositivo) => dispositivo.sectorId === sector.id,
-      ),
-    }))
-    .filter((grupo) => grupo.dispositivos.length > 0),
-)
+type GrupoInvernadero = {
+  invernadero: string
+  superficie: string
+  plantaciones: Plantacion[]
+  filas: FilaDispositivo[]
+}
+
+function crearFila(dispositivo: Dispositivo): FilaDispositivo | null {
+  const tanque = dispositivo.tanqueId ? tanquePorId(dispositivo.tanqueId) : undefined
+  if (!tanque) return null
+  const ph = medicionPorTipo(dispositivo, 'ph')
+  const ec = medicionPorTipo(dispositivo, 'ec')
+  return {
+    dispositivo,
+    tanque,
+    ph,
+    ec,
+    phAlerta: ph ? medicionEnAlerta(dispositivo, ph) : false,
+    ecAlerta: ec ? medicionEnAlerta(dispositivo, ec) : false,
+  }
+}
+
+const grupos = computed<GrupoInvernadero[]>(() => {
+  const nombres = sectores.map((sector) => sector.invernadero)
+  const unicos = nombres.filter((nombre, indice) => nombres.indexOf(nombre) === indice)
+  return unicos
+    .map((invernadero) => {
+      const sectoresInvernadero = sectores.filter((sector) => sector.invernadero === invernadero)
+      const ids = new Set(sectoresInvernadero.map((sector) => sector.id))
+      const filas = dispositivosFiltrados.value
+        .filter((dispositivo) => ids.has(dispositivo.sectorId))
+        .map(crearFila)
+        .filter((fila): fila is FilaDispositivo => fila !== null)
+      const superficie = `${sectoresInvernadero.reduce(
+        (total, sector) => total + Number.parseInt(sector.superficie, 10),
+        0,
+      )} m²`
+      return {
+        invernadero,
+        superficie,
+        plantaciones: plantaciones.filter((plantacion) => ids.has(plantacion.sectorId)),
+        filas,
+      }
+    })
+    .filter((grupo) => grupo.filas.length > 0)
+})
 
 function etiquetasMediciones(dispositivo: Dispositivo) {
   return dispositivo.mediciones.map((medicion) => tipoSensor[medicion.tipo].label).join(' · ')
 }
 
-function resumenSector(grupo: GrupoSector) {
+function resumenGrupo(grupo: GrupoInvernadero) {
   const contar = (estado: Dispositivo['estado']) =>
-    grupo.dispositivos.filter((dispositivo) => dispositivo.estado === estado).length
-  const alertas = grupo.dispositivos.filter((dispositivo) => enAlerta(dispositivo)).length
+    grupo.filas.filter((fila) => fila.dispositivo.estado === estado).length
+  const alertas = grupo.filas.filter((fila) => enAlerta(fila.dispositivo)).length
 
   return [
     { etiqueta: 'operativos', valor: contar('operativo'), tono: 'success' },
@@ -381,7 +499,7 @@ function resumenSector(grupo: GrupoSector) {
   ].filter((chip) => chip.valor > 0)
 }
 
-function plantacionesTexto(grupo: GrupoSector) {
+function plantacionesTexto(grupo: GrupoInvernadero) {
   return grupo.plantaciones.map(
     (plantacion) =>
       `${plantacion.cultivo} · siembra ${formatoFecha(
@@ -392,7 +510,7 @@ function plantacionesTexto(grupo: GrupoSector) {
 
 function limpiarFiltros() {
   busqueda.value = ''
-  filtroSector.value = ''
+  filtroInvernadero.value = ''
   filtroEstado.value = ''
 }
 

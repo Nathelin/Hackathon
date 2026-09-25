@@ -1,7 +1,7 @@
 <template>
   <AdminLayout>
-    <h1 class="font-medium text-4xl pb-5">¡Bienvenido!</h1>
-    <h2 class="font-medium text-2xl pb-5">Resumen de lecturas recientes del Invernadero 1.</h2>
+    <h1 class="font-medium text-4xl pb-5">Invernadero 1</h1>
+    <h2 class="font-medium text-2xl pb-5">Resumen de lecturas recientes.</h2>
 
     <div class="space-y-5 pb-6 sm:space-y-6">
       <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -384,15 +384,20 @@ const tonoBombeo: Record<string, string> = {
 
 const contexto = computed(() => {
   const lineas: string[] = []
-  for (const sector of sectores.filter((item) => item.invernadero === nombreInvernadero)) {
-    lineas.push(`${sector.invernadero} · ${sector.superficie}`)
-    for (const plantacion of plantaciones.filter((item) => item.sectorId === sector.id)) {
-      lineas.push(
-        `${plantacion.cultivo} · siembra ${formatoFecha(
-          plantacion.fechaSiembra,
-        )} (${diasDesde(plantacion.fechaSiembra)} días de ciclo)`,
-      )
-    }
+  const sectoresInvernadero = sectores.filter((item) => item.invernadero === nombreInvernadero)
+  const primerSector = sectoresInvernadero[0]
+  if (!primerSector) return lineas
+
+  lineas.push(`${primerSector.invernadero} · ${primerSector.superficie}`)
+  const primeraPlantacion = plantaciones.find((item) =>
+    sectoresInvernadero.some((sector) => sector.id === item.sectorId),
+  )
+  if (primeraPlantacion) {
+    lineas.push(
+      `${primeraPlantacion.cultivo} · siembra ${formatoFecha(
+        primeraPlantacion.fechaSiembra,
+      )} (${diasDesde(primeraPlantacion.fechaSiembra)} días de ciclo)`,
+    )
   }
   return lineas
 })

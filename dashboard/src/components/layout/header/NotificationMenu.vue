@@ -1,5 +1,38 @@
 <template>
   <div class="relative" ref="dropdownRef">
+    <div
+      v-if="pushToast"
+      class="fixed end-4 top-4 z-99999 w-[min(28rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border-2 border-error-500 bg-white shadow-theme-xl ring-4 ring-error-500/20 animate-fadeIn dark:bg-gray-900"
+      role="alert"
+    >
+      <div class="flex items-center gap-3 bg-error-500 px-5 py-3 text-white">
+        <span class="flex h-10 w-10 shrink-0 animate-pulse items-center justify-center rounded-full bg-white text-xl font-black text-error-500">!</span>
+        <div class="flex-1">
+          <p class="text-base font-bold uppercase tracking-wide">Alerta crítica</p>
+          <p class="text-xs font-medium text-white/80">Lectura fuera de rango detectada</p>
+        </div>
+        <button
+          type="button"
+          class="text-2xl leading-none text-white/80 hover:text-white"
+          aria-label="Cerrar alerta"
+          @click="pushToast = null"
+        >
+          &times;
+        </button>
+      </div>
+      <RouterLink
+        :to="{ name: 'SensorDetalle', params: { id: pushToast.deviceId } }"
+        class="block p-5 transition hover:bg-error-50 dark:hover:bg-error-500/10"
+        @click="pushToast = null"
+      >
+        <p class="text-lg font-bold text-gray-800 dark:text-white/90">{{ pushToast.deviceName }}</p>
+        <p class="mt-1 text-sm text-error-600 dark:text-error-400">{{ pushToast.message }}</p>
+        <span class="mt-4 inline-flex items-center text-sm font-semibold text-brand-500 dark:text-brand-400">
+          Ver sensor y revisar lectura <span class="ms-2 text-lg rtl:rotate-180">→</span>
+        </span>
+      </RouterLink>
+    </div>
+
     <button
       class="relative flex items-center justify-center text-gray-500 transition-colors bg-white border border-gray-200 rounded-full hover:text-dark-900 h-11 w-11 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
       @click="toggleDropdown"
@@ -37,7 +70,7 @@
       <div
         class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 dark:border-gray-800"
       >
-        <h5 class="text-lg font-semibold text-gray-800 dark:text-white/90">Notification</h5>
+        <h5 class="text-lg font-semibold text-gray-800 dark:text-white/90">Alertas del invernadero</h5>
 
         <button @click="closeDropdown" class="text-gray-500 dark:text-gray-400">
           <svg
@@ -58,29 +91,36 @@
         </button>
       </div>
 
+      <button
+        type="button"
+        class="mb-3 flex w-full items-center justify-center gap-2 rounded-lg bg-error-50 px-3 py-2 text-theme-sm font-medium text-error-600 transition hover:bg-error-100 dark:bg-error-500/15 dark:text-error-400 dark:hover:bg-error-500/25"
+        @click.stop="sendCriticalPush"
+      >
+        <span class="flex h-5 w-5 items-center justify-center rounded-full bg-error-500 text-xs font-bold text-white">!</span>
+        Enviar alerta push crítica
+      </button>
+
       <ul class="flex flex-col h-auto overflow-y-auto custom-scrollbar">
         <li v-for="notification in notifications" :key="notification.id" @click="handleItemClick">
           <a
             class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
             href="#"
           >
-            <span class="relative block w-full h-10 rounded-full z-1 max-w-10">
-              <img :src="notification.userImage" alt="User" class="overflow-hidden rounded-full" />
-              <span
-                :class="notification.status === 'online' ? 'bg-success-500' : 'bg-error-500'"
-                class="absolute bottom-0 right-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
-              ></span>
+            <span
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+              :class="notification.severity === 'critical'
+                ? 'bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-400'
+                : 'bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-orange-400'"
+            >
+              {{ notification.icon }}
             </span>
 
             <span class="block">
               <span class="mb-1.5 block text-theme-sm text-gray-500 dark:text-gray-400">
                 <span class="font-medium text-gray-800 dark:text-white/90">
-                  {{ notification.userName }}
+                  {{ notification.title }}
                 </span>
-                {{ notification.action }}
-                <span class="font-medium text-gray-800 dark:text-white/90">
-                  {{ notification.project }}
-                </span>
+                {{ notification.message }}
               </span>
 
               <span class="flex items-center gap-2 text-gray-500 text-theme-xs dark:text-gray-400">
@@ -98,7 +138,7 @@
         class="mt-3 flex justify-center rounded-lg border border-gray-300 bg-white p-3 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/3 dark:hover:text-gray-200"
         @click="handleViewAllClick"
       >
-        View All Notifications
+        Ver todas las alertas
       </router-link>
     </div>
     <!-- Dropdown End -->
@@ -106,99 +146,132 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import {
+  bateriaBaja,
+  dispositivos,
+  formatoFechaHora,
+  medicionEnAlerta,
+  revisionVencida,
+  type Dispositivo,
+  type Medicion,
+} from '@/data/mockSensores'
 
 const dropdownOpen = ref(false)
-const notifying = ref(true)
+const notifying = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
+const simulatedNotifications = ref<Notification[]>([])
+const pushToast = ref<{ deviceId: string; deviceName: string; message: string } | null>(null)
 
-const notifications = ref([
-  {
-    id: 1,
-    userName: 'Terry Franci',
-    userImage: '/images/user/user-02.jpg',
-    action: 'requests permission to change',
-    project: 'Project - Nganter App',
-    type: 'Project',
-    time: '5 min ago',
-    status: 'online',
-  },
-  {
-    id: 2,
-    userName: 'Terry Franci',
-    userImage: '/images/user/user-03.jpg',
-    action: 'requests permission to change',
-    project: 'Project - Nganter App',
-    type: 'Project',
-    time: '5 min ago',
-    status: 'offline',
-  },
-  {
-    id: 3,
-    userName: 'Terry Franci',
-    userImage: '/images/user/user-04.jpg',
-    action: 'requests permission to change',
-    project: 'Project - Nganter App',
-    type: 'Project',
-    time: '5 min ago',
-    status: 'online',
-  },
-  {
-    id: 4,
-    userName: 'Terry Franci',
-    userImage: '/images/user/user-05.jpg',
-    action: 'requests permission to change',
-    project: 'Project - Nganter App',
-    type: 'Project',
-    time: '5 min ago',
-    status: 'online',
-  },
-  {
-    id: 5,
-    userName: 'Terry Franci',
-    userImage: '/images/user/user-06.jpg',
-    action: 'requests permission to change',
-    project: 'Project - Nganter App',
-    type: 'Project',
-    time: '5 min ago',
-    status: 'offline',
-  },
-  {
-    id: 6,
-    userName: 'Terry Franci',
-    userImage: '/images/user/user-07.jpg',
-    action: 'requests permission to change',
-    project: 'Project - Nganter App',
-    type: 'Project',
-    time: '5 min ago',
-    status: 'online',
-  },
-  {
-    id: 7,
-    userName: 'Terry Franci',
-    userImage: '/images/user/user-08.jpg',
-    action: 'requests permission to change',
-    project: 'Project - Nganter App',
-    type: 'Project',
-    time: '5 min ago',
-    status: 'online',
-  },
-  {
-    id: 7,
-    userName: 'Terry Franci',
-    userImage: '/images/user/user-09.jpg',
-    action: 'requests permission to change',
-    project: 'Project - Nganter App',
-    type: 'Project',
-    time: '5 min ago',
-    status: 'online',
-  },
-])
+type Notification = {
+  id: string
+  title: string
+  message: string
+  type: string
+  time: string
+  severity: 'critical' | 'warning'
+  icon: string
+}
+
+const readingAlert = (device: Dispositivo, measurement: Medicion): Notification => {
+  const { valor } = measurement.ultimaLectura
+  const { min, max } = measurement.rangoNormal
+  const direction = valor < min ? 'por debajo' : 'por encima'
+
+  return {
+    id: `reading-${device.id}-${measurement.tipo}`,
+    title: `${device.codigo} · ${device.nombre}`,
+    message: `Lectura ${direction} del rango (${valor} ${measurement.tipo}; normal ${min}-${max})`,
+    type: 'Lectura anómala',
+    time: formatoFechaHora(measurement.ultimaLectura.fecha),
+    severity: 'critical',
+    icon: '!',
+  }
+}
+
+const sensorNotifications = computed<Notification[]>(() => {
+  const alerts: Notification[] = []
+
+  for (const device of dispositivos) {
+    for (const measurement of device.mediciones) {
+      if (medicionEnAlerta(device, measurement)) alerts.push(readingAlert(device, measurement))
+    }
+
+    if (revisionVencida(device)) {
+      alerts.push({
+        id: `revision-${device.id}`,
+        title: `${device.codigo} · ${device.nombre}`,
+        message: 'Tiene una revisión de mantenimiento vencida',
+        type: 'Mantenimiento',
+        time: `Programada para ${device.proximaRevision}`,
+        severity: 'warning',
+        icon: 'M',
+      })
+    }
+
+    if (bateriaBaja(device)) {
+      alerts.push({
+        id: `battery-${device.id}`,
+        title: `${device.codigo} · ${device.nombre}`,
+        message: `Batería baja (${device.bateria}%)`,
+        type: 'Estado del dispositivo',
+        time: 'Requiere atención',
+        severity: 'warning',
+        icon: 'B',
+      })
+    }
+  }
+
+  return alerts.slice(0, 8)
+})
+
+const notifications = computed<Notification[]>(() => [
+  ...simulatedNotifications.value,
+  ...sensorNotifications.value,
+].slice(0, 8))
+
+const sendCriticalPush = async () => {
+  const device = dispositivos.find((item) =>
+    item.mediciones.some((measurement) => medicionEnAlerta(item, measurement)),
+  ) ?? dispositivos[0]
+  const measurement = device.mediciones.find((item) => medicionEnAlerta(device, item)) ?? device.mediciones[0]
+  const alert = readingAlert(device, measurement)
+  const simulatedAlert: Notification = {
+    ...alert,
+    id: `push-${Date.now()}`,
+    title: `Alerta push · ${alert.title}`,
+    message: `Lectura crítica detectada. ${alert.message}`,
+    time: 'Ahora',
+  }
+
+  simulatedNotifications.value = [simulatedAlert, ...simulatedNotifications.value]
+  notifying.value = true
+  pushToast.value = {
+    deviceId: device.id,
+    deviceName: `${device.codigo} · ${device.nombre}`,
+    message: `${measurement.ultimaLectura.valor} ${measurement.tipo}. ${alert.message}`,
+  }
+  window.setTimeout(() => {
+    pushToast.value = null
+  }, 6000)
+
+  if (!('Notification' in window)) return
+
+  let permission = Notification.permission
+  if (permission === 'default') permission = await Notification.requestPermission()
+  if (permission !== 'granted') return
+
+  new Notification('Lectura crítica del invernadero', {
+    body: `${device.codigo}: ${measurement.ultimaLectura.valor} ${measurement.tipo}`,
+    icon: '/images/logo/logo-icon.svg',
+    tag: simulatedAlert.id,
+  })
+}
 
 const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value
-  notifying.value = false
+  notifying.value = notifications.value.length > 0 && !dropdownOpen.value
 }
 
 const closeDropdown = () => {
@@ -224,6 +297,7 @@ const handleViewAllClick = (event: Event) => {
 }
 
 onMounted(() => {
+  notifying.value = notifications.value.length > 0
   document.addEventListener('click', handleClickOutside)
 })
 
