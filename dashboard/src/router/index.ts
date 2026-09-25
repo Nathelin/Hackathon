@@ -8,10 +8,26 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'Ecommerce',
-      component: () => import('../views/Ecommerce.vue'),
+      name: 'Inicio',
+      component: () => import('../views/Inicio.vue'),
       meta: {
-        title: 'eCommerce Dashboard',
+        title: 'Inicio',
+      },
+    },
+    {
+      path: '/invernadero1',
+      name: 'Invernadero1',
+      component: () => import('../views/Invernadero1.vue'),
+      meta: {
+        title: 'Invernadero 1',
+      },
+    },
+    {
+      path: '/invernadero2',
+      name: 'Invernadero2',
+      component: () => import('../views/Invernadero2.vue'),
+      meta: {
+        title: 'Invernadero 2',
       },
     },
     {
@@ -19,7 +35,23 @@ const router = createRouter({
       name: 'Calendar',
       component: () => import('../views/Others/Calendar.vue'),
       meta: {
-        title: 'Calendar',
+        title: 'Calendario de mantenimiento',
+      },
+    },
+    {
+      path: '/sensores',
+      name: 'Sensores',
+      component: () => import('../views/Sensores.vue'),
+      meta: {
+        title: 'Sensores',
+      },
+    },
+    {
+      path: '/sensores/:id',
+      name: 'SensorDetalle',
+      component: () => import('../views/SensorDetalle.vue'),
+      meta: {
+        title: 'Detalle del dispositivo',
       },
     },
     {
@@ -28,6 +60,14 @@ const router = createRouter({
       component: () => import('../views/Others/UserProfile.vue'),
       meta: {
         title: 'Profile',
+      },
+    },
+    {
+      path: '/plan',
+      name: 'PlanPago',
+      component: () => import('../views/Others/Plan.vue'),
+      meta: {
+        title: 'Plan',
       },
     },
     {
@@ -146,6 +186,6 @@ const router = createRouter({
 export default router
 
 router.beforeEach((to, from, next) => {
-  document.title = `Vue.js ${to.meta.title} | TailAdmin - Vue.js Tailwind CSS Dashboard Template`
+  document.title = `NOMBRE APLICACION [REDACTED]`
   next()
 })

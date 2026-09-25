@@ -14,10 +14,7 @@
     @mouseleave="isHovered = false"
   >
     <div
-      :class="[
-        'pt-8 pb-7 flex',
-        !isExpanded && !isHovered ? 'xl:justify-center' : 'justify-start',
-      ]"
+      :class="['pt-8 pb-7 flex', !isExpanded && !isHovered ? 'xl:justify-center' : 'justify-start']"
     >
       <router-link to="/">
         <img
@@ -36,27 +33,17 @@
           width="150"
           height="40"
         />
-        <img
-          v-else
-          src="/images/logo/logo-icon.svg"
-          alt="Logo"
-          width="32"
-          height="32"
-        />
+        <img v-else src="/images/logo/logo-icon.svg" alt="Logo" width="32" height="32" />
       </router-link>
     </div>
-    <div
-      class="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar"
-    >
+    <div class="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
       <nav class="mb-6">
         <div class="flex flex-col gap-4">
           <div v-for="(menuGroup, groupIndex) in menuGroups" :key="groupIndex">
             <h2
               :class="[
                 'mb-4 text-xs uppercase flex leading-5 text-gray-400',
-                !isExpanded && !isHovered
-                  ? 'xl:justify-center'
-                  : 'justify-start',
+                !isExpanded && !isHovered ? 'xl:justify-center' : 'justify-start',
               ]"
             >
               <template v-if="isExpanded || isHovered || isMobileOpen">
@@ -75,9 +62,7 @@
                       'menu-item-active': isSubmenuOpen(groupIndex, index),
                       'menu-item-inactive': !isSubmenuOpen(groupIndex, index),
                     },
-                    !isExpanded && !isHovered
-                      ? 'xl:justify-center'
-                      : 'xl:justify-start',
+                    !isExpanded && !isHovered ? 'xl:justify-center' : 'xl:justify-start',
                   ]"
                 >
                   <span
@@ -99,10 +84,7 @@
                     :class="[
                       'ms-auto w-5 h-5 transition-transform duration-200',
                       {
-                        'rotate-180 text-brand-500': isSubmenuOpen(
-                          groupIndex,
-                          index
-                        ),
+                        'rotate-180 text-brand-500': isSubmenuOpen(groupIndex, index),
                       },
                     ]"
                   />
@@ -120,18 +102,14 @@
                 >
                   <span
                     :class="[
-                      isActive(item.path)
-                        ? 'menu-item-icon-active'
-                        : 'menu-item-icon-inactive',
+                      isActive(item.path) ? 'menu-item-icon-active' : 'menu-item-icon-inactive',
                     ]"
                   >
                     <component :is="item.icon" />
                   </span>
-                  <span
-                    v-if="isExpanded || isHovered || isMobileOpen"
-                    class="menu-item-text"
-                    >{{ item.name }}</span
-                  >
+                  <span v-if="isExpanded || isHovered || isMobileOpen" class="menu-item-text">{{
+                    item.name
+                  }}</span>
                 </router-link>
                 <transition
                   @enter="startTransition"
@@ -141,8 +119,7 @@
                 >
                   <div
                     v-show="
-                      isSubmenuOpen(groupIndex, index) &&
-                      (isExpanded || isHovered || isMobileOpen)
+                      isSubmenuOpen(groupIndex, index) && (isExpanded || isHovered || isMobileOpen)
                     "
                   >
                     <ul class="mt-2 space-y-1 ms-9">
@@ -152,12 +129,8 @@
                           :class="[
                             'menu-dropdown-item',
                             {
-                              'menu-dropdown-item-active': isActive(
-                                subItem.path
-                              ),
-                              'menu-dropdown-item-inactive': !isActive(
-                                subItem.path
-                              ),
+                              'menu-dropdown-item-active': isActive(subItem.path),
+                              'menu-dropdown-item-inactive': !isActive(subItem.path),
                             },
                           ]"
                         >
@@ -168,12 +141,8 @@
                               :class="[
                                 'menu-dropdown-badge',
                                 {
-                                  'menu-dropdown-badge-active': isActive(
-                                    subItem.path
-                                  ),
-                                  'menu-dropdown-badge-inactive': !isActive(
-                                    subItem.path
-                                  ),
+                                  'menu-dropdown-badge-active': isActive(subItem.path),
+                                  'menu-dropdown-badge-inactive': !isActive(subItem.path),
                                 },
                               ]"
                             >
@@ -184,12 +153,8 @@
                               :class="[
                                 'menu-dropdown-badge',
                                 {
-                                  'menu-dropdown-badge-active': isActive(
-                                    subItem.path
-                                  ),
-                                  'menu-dropdown-badge-inactive': !isActive(
-                                    subItem.path
-                                  ),
+                                  'menu-dropdown-badge-active': isActive(subItem.path),
+                                  'menu-dropdown-badge-inactive': !isActive(subItem.path),
                                 },
                               ]"
                             >
@@ -206,7 +171,6 @@
           </div>
         </div>
       </nav>
-      <SidebarWidget v-if="isExpanded || isHovered || isMobileOpen" />
     </div>
   </aside>
 </template>
@@ -220,16 +184,14 @@ import {
   CalenderIcon,
   ChevronDownIcon,
   GridIcon,
+  HomeIcon,
   HorizontalDots,
   ListIcon,
   PageIcon,
   PieChartIcon,
-  PlugInIcon,
   TableIcon,
   UserCircleIcon,
 } from '@/icons'
-import BoxCubeIcon from '@/icons/BoxCubeIcon.vue'
-import SidebarWidget from './SidebarWidget.vue'
 
 const route = useRoute()
 
@@ -260,55 +222,66 @@ const menuGroups: MenuGroup[] = [
   {
     title: 'Menu',
     items: [
+      /*{
+        icon: HomeIcon,
+        name: 'Inicio',
+        path: '/',
+      },*/
       {
         icon: GridIcon,
         name: 'Dashboard',
-        subItems: [{ name: 'Ecommerce', path: '/', pro: false }],
+        subItems: [
+          { name: 'Invernadero 1', path: '/invernadero1', pro: false },
+          { name: 'Invernadero 2', path: '/invernadero2', pro: false },
+        ],
+      },
+      {
+        icon: ListIcon,
+        name: 'Sensores',
+        path: '/sensores',
       },
       {
         icon: CalenderIcon,
-        name: 'Calendar',
+        name: 'Calendario',
         path: '/calendar',
       },
-      {
-        icon: UserCircleIcon,
-        name: 'User Profile',
-        path: '/profile',
-      },
-
-      {
-        name: 'Forms',
+      /*{
+        name: 'Formularios',
         icon: ListIcon,
         subItems: [
           { name: 'Form Elements', path: '/form-elements', pro: false },
         ],
       },
       {
-        name: 'Tables',
+        name: 'Tablas',
+        icon: TableIcon,
+        subItems: [{ name: 'Basic Tables', path: '/basic-tables', pro: false }],
+      },*/
+      {
+        name: 'Predicciones',
         icon: TableIcon,
         subItems: [{ name: 'Basic Tables', path: '/basic-tables', pro: false }],
       },
       {
-        name: 'Pages',
+        name: 'Informes',
         icon: PageIcon,
-        subItems: [
-          { name: 'Blank Page', path: '/blank', pro: false },
-          { name: '404 Page', path: '/error-404', pro: false },
-        ],
+        subItems: [{ name: 'Estado de los sensores', path: '/blank', pro: false }],
+      },
+      {
+        icon: UserCircleIcon,
+        name: 'Perfil',
+        path: '/profile',
       },
     ],
   },
   {
-    title: 'Others',
+    title: 'Otros',
     items: [
       {
         icon: PieChartIcon,
-        name: 'Charts',
-        subItems: [
-          { name: 'Line Chart', path: '/line-chart', pro: false },
-          { name: 'Bar Chart', path: '/bar-chart', pro: false },
-        ],
-      },
+        name: 'Mi plan',
+        path: '/plan',
+      } /*
       {
         icon: BoxCubeIcon,
         name: 'Ui Elements',
@@ -328,14 +301,12 @@ const menuGroups: MenuGroup[] = [
           { name: 'Signin', path: '/signin', pro: false },
           { name: 'Signup', path: '/signup', pro: false },
         ],
-      },
+      },*/,
     ],
   },
 ]
 
 const isActive = (path?: string) => (path ? route.path === path : false)
-
-
 
 const setActiveMenuFromRoute = () => {
   menuGroups.forEach((group, groupIndex) => {

@@ -10,7 +10,7 @@
         <img src="/images/user/owner.png" alt="User" class="h-full w-full object-cover" />
       </span>
 
-      <span class="block font-medium text-theme-sm ltr:mr-1 rtl:ml-1">Musharof</span>
+      <span class="block font-medium text-theme-sm ltr:mr-1 rtl:ml-1">Usuario</span>
 
       <!-- Chevron Icon -->
       <ChevronDownIcon
@@ -27,7 +27,7 @@
       <!-- User Info -->
       <div>
         <span class="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-          Musharof Chowdhury
+          Usuario
         </span>
         <span class="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
           randomuser@pimjo.com
