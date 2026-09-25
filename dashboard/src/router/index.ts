@@ -8,10 +8,10 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'Inicio',
-      component: () => import('../views/Inicio.vue'),
+      name: 'Invernadero1Inicio',
+      component: () => import('../views/Invernadero1.vue'),
       meta: {
-        title: 'Inicio',
+        title: 'Invernadero 1',
       },
     },
     {
